@@ -1,0 +1,147 @@
+name: 🚀 Deploy
+on:
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  actions: write
+  contents: read
+
+jobs:
+  lint:
+    name: ⬣ ESLint
+    runs-on: ubuntu-22.04
+    steps:
+      - name: ⬇️ Checkout repo
+        uses: actions/checkout@v3
+
+      - name: ⎔ Setup node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20
+
+      - name: 📥 Download deps
+        uses: oven-sh/setup-bun@v1
+
+      - name: 🔬 Lint
+        run: bun i && bun lint
+
+  typecheck:
+    name: ʦ TypeScript
+    runs-on: ubuntu-22.04
+    steps:
+      - name: ⬇️ Checkout repo
+        uses: actions/checkout@v3
+
+      - name: ⎔ Setup node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20
+
+      - name: 📥 Download deps
+        uses: oven-sh/setup-bun@v1
+
+      - name: 🔎 Type check
+        run: bun i && bun typecheck
+
+  vitest:
+    name: ⚡ Vitest
+    runs-on: ubuntu-22.04
+    steps:
+      - name: ⬇️ Checkout repo
+        uses: actions/checkout@v3
+
+      - name: ⎔ Setup node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20
+
+      - name: 📥 Download deps
+        uses: oven-sh/setup-bun@v1
+
+      - name: 🏄 Copy test env vars
+        run: cp .env.example .env
+
+      - name: ⚡ Run vitest
+        run: bun i && bun test -- --coverage
+
+  # deploy-staging:
+  #   name: 🚀 Deploy to Staging
+  #   runs-on: ubuntu-22.04
+  #   needs: [lint, typecheck, vitest]
+
+  #   environment:
+  #     name: staging
+  #     url: https://forgetyourbudget-staging.fly.dev
+
+  #   steps:
+  #     - name: ⬇️ Checkout repo
+  #       uses: actions/checkout@v3
+
+  #     - name: 👀 Read app name
+  #       uses: SebRollen/toml-action@v1.0.2
+  #       id: app_name
+  #       with:
+  #         file: 'fly.toml'
+  #         field: 'app'
+
+  #     - name: 🚚 Move Dockerfile
+  #       run: |
+  #         mv ./other/Dockerfile ./Dockerfile
+  #         mv ./other/.dockerignore ./.dockerignore
+
+  #     - name: 🎈 Setup Fly
+  #       uses: superfly/flyctl-actions/setup-flyctl@v1.4
+
+  #     - name: 🚀 Deploy
+  #       run:
+  #         flyctl deploy --remote-only --build-arg COMMIT_SHA=${{ github.sha }}
+  #        --app ${{ steps.app_name.outputs.value }}-staging
+  #        --build-secret SENTRY_AUTH_TOKEN=${{ secrets.SENTRY_AUTH_TOKEN }}
+  #        --build-secret AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}
+  #        --build-secret AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  #       env:
+  #         FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+
+  deploy-production:
+    name: 🚀 Deploy to Production
+    runs-on: ubuntu-22.04
+    # needs: [deploy-staging]
+    needs: [lint, typecheck, vitest]
+
+    environment:
+      name: production
+      url: https://forgetyourbudget.fly.dev
+
+    steps:
+      - name: ⬇️ Checkout repo
+        uses: actions/checkout@v3
+
+      - name: 👀 Read app name
+        uses: SebRollen/toml-action@v1.0.2
+        id: app_name
+        with:
+          file: 'fly.toml'
+          field: 'app'
+
+      - name: 🚚 Move Dockerfile
+        run: |
+          mv ./other/Dockerfile ./Dockerfile
+          mv ./other/.dockerignore ./.dockerignore
+
+      - name: 🎈 Setup Fly
+        uses: superfly/flyctl-actions/setup-flyctl@v1.4
+
+      - name: 🚀 Deploy Production
+        run:
+          flyctl deploy --remote-only --build-arg COMMIT_SHA=${{ github.sha }}
+          --build-secret SENTRY_AUTH_TOKEN=${{ secrets.SENTRY_AUTH_TOKEN }}
+          --build-secret AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}
+          --build-secret AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
