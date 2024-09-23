@@ -16,17 +16,18 @@ primary_fly_vm_id = `<your_app_machine_id>`
 
 ### Deploying for the first time
 
-- Launch your app on Fly
+- Launch your app on Fly with `fly launch`
+- Setup a [Tigris](https://console.tigris.dev) bucket
 - Setup Github Action secrets
-   - Fly token
-   - AWS access token and secret token (for console.tigris.dev)
-- Setup Fly Secrets using `fly secrets set` (all secrets in your .env)
+   - Fly token from `fly auth token`
+   - AWS access token and secret token (from Tigris)
+- Setup Fly Secrets with `fly secrets set` (all secrets in your .env)
    - [Core env variables](https://github.com/epicweb-dev/epic-stack/blob/main/docs/deployment.md)
    - Add any extra secrets you need
-- Deploy your app
+- Deploy your app with `fly deploy`
 - Setup the domain on Fly
-- (if needed) setup [Resend](https://resend.com) to send emails (use the email in your .env/secret on fly)
-- Update the `scripts/backup` & `scripts/restore-latest-backup` script to use (any) one of your machine ids (line 5) and app name
+- Setup [Resend](https://resend.com) to send emails (use the email in your .env/secret on fly)
+- Update the `scripts/backup` & `scripts/restore-latest-backup` script to use (any) one of your machine ids (line 5), app name, and Tigris bucket name (should be the same as app name)
 
 # Database Troubleshooting
 
