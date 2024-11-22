@@ -70,7 +70,7 @@ export const links: LinksFunction = () => {
 
 export const meta: MetaFunction<typeof loader> = ({ data }) => {
 	return [
-		{ title: data ? 'forgetyourbudget' : 'Error | forgetyourbudget' },
+		{ title: data ? 'billing-saas' : 'Error | billing-saas' },
 		{ name: 'description', content: `Your own captain's log` },
 	]
 }
@@ -94,6 +94,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 							phone: true,
 							deviceToken: true,
 							image: { select: { id: true } },
+							organizations: { select: { id: true } },
 							roles: {
 								select: {
 									name: true,
@@ -114,6 +115,13 @@ export async function loader({ request }: LoaderFunctionArgs) {
 	const { toast, headers: toastHeaders } = await getToast(request)
 	const honeyProps = honeypot.getInputProps()
 	const [csrfToken, csrfCookieHeader] = await csrf.commitToken()
+
+	let headers = combineHeaders(
+		{ 'Server-Timing': timings.toString() },
+		toastHeaders,
+		csrfCookieHeader ? { 'set-cookie': csrfCookieHeader } : null,
+	)
+
 	return json(
 		{
 			user,
@@ -128,13 +136,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 			honeyProps,
 			csrfToken,
 		},
-		{
-			headers: combineHeaders(
-				{ 'Server-Timing': timings.toString() },
-				toastHeaders,
-				csrfCookieHeader ? { 'set-cookie': csrfCookieHeader } : null,
-			),
-		},
+		{ headers },
 	)
 }
 

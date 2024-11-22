@@ -26,7 +26,8 @@ model User {
   connections   Connection[]
   uploads       Upload[]
   organizations Organization[]
-  Goal          Goal[]
+
+  @@map("users")
 }
 
 model Organization {
@@ -35,6 +36,9 @@ model Organization {
   updatedAt DateTime @updatedAt
   name      String
   users     User[]
+  clients   Client[]
+
+  @@map("organizations")
 }
 
 model UserImage {
@@ -46,12 +50,16 @@ model UserImage {
   blob        Bytes
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   userId      String   @unique
+
+  @@map("users_images")
 }
 
 model Password {
   hash   String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   userId String @unique
+
+  @@map("passwords")
 }
 
 model Session {
@@ -63,6 +71,7 @@ model Session {
   userId         String
 
   @@index([userId])
+  @@map("sessions")
 }
 
 model Permission {
@@ -76,6 +85,7 @@ model Permission {
   roles       Role[]
 
   @@unique([action, entity, access])
+  @@map("permissions")
 }
 
 model Role {
@@ -86,6 +96,8 @@ model Role {
   description String       @default("")
   users       User[]
   permissions Permission[]
+
+  @@map("roles")
 }
 
 model Verification {
@@ -102,6 +114,7 @@ model Verification {
   expiresAt DateTime?
 
   @@unique([target, type])
+  @@map("verifications")
 }
 
 model Connection {
@@ -114,6 +127,7 @@ model Connection {
   userId       String
 
   @@unique([providerName, providerId])
+  @@map("connections")
 }
 
 model FeatureFlag {
@@ -123,6 +137,8 @@ model FeatureFlag {
   name        String   @unique
   description String?
   isEnabled   Boolean  @default(false)
+
+  @@map("feature_flags")
 }
 
 model Upload {
@@ -135,35 +151,79 @@ model Upload {
   blob        Bytes
   user        User      @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   userId      String
+
+  @@map("uploads")
 }
 
-// custom
+model Job {
+  id          String   @id @default(uuid())
+  type        String
+  data        String // JSON stringified data
+  status      String // pending, processing, completed, failed
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  attempts    Int      @default(0)
+  maxAttempts Int      @default(3)
+  error       String?
 
-model Goal {
+  @@map("jobs")
+}
+
+model Setting {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  key       String   @unique
+  value     String
+
+  @@map("settings")
+}
+
+model Client {
+  id           String       @id @default(cuid())
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  name         String
+  email        String?
+  company      String?
+  hourlyRate   Decimal?
+  timeEntries  TimeEntry[]
+  invoices     Invoice[]
+  orgId        String
+  organization Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  @@map("clients")
+}
+
+model TimeEntry {
   id          String    @id @default(cuid())
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
-  title       String
+  startTime   DateTime
+  endTime     DateTime?
+  hourlyRate  Decimal?
   description String?
-  dueDate     DateTime?
-  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  userId      String
-  steps       Step[]
+  clientId    String?
+  client      Client?   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  invoiceId   String?
+  invoice     Invoice?  @relation(fields: [invoiceId], references: [id])
 
-  @@index([userId])
+  @@map("time_entries")
 }
 
-model Step {
-  id          String    @id @default(cuid())
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  snoozeTill  DateTime?
-  completedAt DateTime?
-  title       String
-  description String?
-  duration    Int // Duration in minutes (e.g., 15, 30)
-  goal        Goal      @relation(fields: [goalId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  goalId      String
+model Invoice {
+  id          String      @id @default(cuid())
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  number      String      @unique
+  issueDate   DateTime    @default(now())
+  dueDate     DateTime
+  status      String      @default("DRAFT") // DRAFT, SENT, PAID, OVERDUE
+  clientId    String
+  client      Client      @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  timeEntries TimeEntry[]
+  total       Decimal
+  notes       String?
 
-  @@index([goalId])
+  @@map("invoices")
 }

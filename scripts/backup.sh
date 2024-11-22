@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # Setup variables
-bucket="forgetyourbudget"
-app="forgetyourbudget"
+bucket="billing-saas"
+app="billing-saas"
 vm_id="your_app_machine_id"
 db_url="http://$vm_id.vm.$app.internal:20202"
 s3_endpoint="https://fly.storage.tigris.dev"

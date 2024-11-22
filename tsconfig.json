@@ -13,12 +13,12 @@
     "noImplicitAny": true,
     "allowJs": true,
     "forceConsistentCasingInFileNames": true,
-    "paths": {
-      "#*": ["./*"]
-    },
-    "skipLibCheck": true,
-    "allowImportingTsExtensions": true,
-    "noEmit": true,
-    "noErrorTruncation": true
+		"paths": {
+			"#app/*": ["./app/*"]
+		},
+		"skipLibCheck": true,
+		"allowImportingTsExtensions": true,
+		"noEmit": true,
+		"noErrorTruncation": true
   }
 }

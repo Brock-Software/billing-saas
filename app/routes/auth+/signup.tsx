@@ -65,7 +65,7 @@ export async function action({ request }: ActionFunctionArgs) {
 
 	const response = await sendEmail({
 		to: email,
-		subject: `Welcome to forgetyourbudget`,
+		subject: `Welcome to billing-saas`,
 		react: <SignupEmail onboardingUrl={verifyUrl.toString()} otp={otp} />,
 	})
 
@@ -89,7 +89,7 @@ export function SignupEmail({
 		<E.Html lang="en" dir="ltr">
 			<E.Container>
 				<h1>
-					<E.Text>Welcome to forgetyourbudget</E.Text>
+					<E.Text>Welcome to billing-saas</E.Text>
 				</h1>
 				<p>
 					<E.Text>
@@ -106,7 +106,7 @@ export function SignupEmail({
 }
 
 export const meta: MetaFunction = () => {
-	return [{ title: 'Sign Up | forgetyourbudget' }]
+	return [{ title: 'Sign Up | billing-saas' }]
 }
 
 export default function SignupRoute() {
@@ -115,7 +115,7 @@ export default function SignupRoute() {
 	return (
 		<div className="w-full max-w-md px-8 pt-4">
 			<Link to="/">
-				<h2 className="opacity-75">forgetyourbudget.com</h2>
+				<h2 className="opacity-75">billing-saas</h2>
 			</Link>
 			<div className="mb-8 mt-12 text-center md:text-left">
 				<p className="text-xl">Get started</p>

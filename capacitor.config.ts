@@ -2,15 +2,15 @@ import { type CapacitorConfig } from '@capacitor/cli'
 
 const config: CapacitorConfig = {
 	appId: 'your.apple.id',
-	appName: 'forgetyourbudget',
+	appName: 'billing-saas',
 	webDir: 'build-mobile',
 	server: {
 		url: 'http://localhost:3000',
 		allowNavigation: [
 			'yourdomain.com',
 			'*.yourdomain.com',
-			'forgetyourbudget.fly.dev',
-			'forgetyourbudget-staging.fly.dev',
+			'billing-saas.fly.dev',
+			'billing-saas-staging.fly.dev',
 		],
 	},
 	ios: { limitsNavigationsToAppBoundDomains: false },

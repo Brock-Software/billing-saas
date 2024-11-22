@@ -77,7 +77,7 @@ jobs:
 
   #   environment:
   #     name: staging
-  #     url: https://forgetyourbudget-staging.fly.dev
+  #     url: https://billing-saas-staging.fly.dev
 
   #   steps:
   #     - name: ⬇️ Checkout repo
@@ -115,8 +115,8 @@ jobs:
     needs: [lint, typecheck, vitest]
 
     environment:
-      name: production
-      url: https://forgetyourbudget.fly.dev
+      name: Production
+      url: https://billing-saas.fly.dev
 
     steps:
       - name: ⬇️ Checkout repo

@@ -1,9 +1,10 @@
 import { redirect } from '@remix-run/node'
 import { safeRedirect } from 'remix-utils/safe-redirect'
+import { setOrgId } from '#app/routes/api+/preferences+/organization/cookie.server.ts'
 import { twoFAVerificationType } from '#app/routes/app+/profile+/two-factor+/route.js'
 import { getUserId, sessionKey } from '#app/utils/auth.server'
 import { prisma } from '#app/utils/db.server'
-import { combineResponseInits } from '#app/utils/misc'
+import { combineHeaders, combineResponseInits } from '#app/utils/misc'
 import { authSessionStorage } from '#app/utils/session.server'
 import { redirectWithToast } from '#app/utils/toast.server'
 import { verifySessionStorage } from '#app/utils/verification.server'
@@ -33,6 +34,19 @@ export async function handleNewSession(
 	})
 	const userHasTwoFactor = Boolean(verification)
 
+	const user = await prisma.user.findUnique({
+		select: { organizations: { select: { id: true } } },
+		where: { id: session.userId },
+	})
+
+	let headers = new Headers()
+	if (user?.organizations.length) {
+		if (user.organizations.length) {
+			const orgCookie = setOrgId(user.organizations[0].id)
+			headers = combineHeaders(headers, { 'Set-Cookie': orgCookie })
+		}
+	}
+
 	if (userHasTwoFactor) {
 		const verifySession = await verifySessionStorage.getSession()
 		verifySession.set(unverifiedSessionIdKey, session.id)
@@ -42,17 +56,14 @@ export async function handleNewSession(
 			target: session.userId,
 			redirectTo,
 		})
+
+		headers = combineHeaders(headers, {
+			'set-cookie': await verifySessionStorage.commitSession(verifySession),
+		})
+
 		return redirect(
 			`${redirectUrl.pathname}?${redirectUrl.searchParams}`,
-			combineResponseInits(
-				{
-					headers: {
-						'set-cookie':
-							await verifySessionStorage.commitSession(verifySession),
-					},
-				},
-				responseInit,
-			),
+			combineResponseInits({ headers }, responseInit),
 		)
 	} else {
 		const authSession = await authSessionStorage.getSession(
@@ -60,18 +71,15 @@ export async function handleNewSession(
 		)
 		authSession.set(sessionKey, session.id)
 
+		headers = combineHeaders(headers, {
+			'set-cookie': await authSessionStorage.commitSession(authSession, {
+				expires: session.expirationDate,
+			}),
+		})
+
 		return redirect(
 			safeRedirect(redirectTo),
-			combineResponseInits(
-				{
-					headers: {
-						'set-cookie': await authSessionStorage.commitSession(authSession, {
-							expires: session.expirationDate,
-						}),
-					},
-				},
-				responseInit,
-			),
+			combineResponseInits({ headers }, responseInit),
 		)
 	}
 }

@@ -1,7 +1,7 @@
 #!/bin/bash
 
-bucket="forgetyourbudget"
-app="forgetyourbudget"
+bucket="billing-saas"
+app="billing-saas"
 vm_id="your_app_machine_id"
 
 # Get the latest backup file from S3

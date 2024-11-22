@@ -31,50 +31,52 @@ export default function AuthLayout() {
 	})
 
 	return (
-		<div className="mx-auto flex min-h-screen max-w-screen-sm flex-col">
-			<nav className="flex items-center justify-between p-4">
-				<div className="flex items-center">
-					<Link to="/app">
-						<p className="font-bold opacity-75">forgetyourbudget</p>
-					</Link>
-					{breadcrumbs.length ? (
-						<>
-							<span className="ml-2">/</span>
-							{breadcrumbs}
-						</>
-					) : null}
-				</div>
-				<DropdownMenu>
-					<DropdownMenuTrigger asChild>
-						<Button variant="ghost" size="icon">
-							<Settings className="h-5 w-5" />
-						</Button>
-					</DropdownMenuTrigger>
-					<DropdownMenuContent align="end">
-						{user ? (
+		<div className="min-h-screen bg-stone-50">
+			<div className="mx-auto flex min-h-screen max-w-screen-xl flex-col">
+				<nav className="flex items-center justify-between p-4">
+					<div className="flex items-center">
+						<Link to="/app">
+							<p className="font-bold opacity-75">billing-saas</p>
+						</Link>
+						{breadcrumbs.length ? (
 							<>
-								<DropdownMenuItem asChild>
-									<Link to="/app/profile">Account</Link>
-								</DropdownMenuItem>
-								<DropdownMenuItem asChild>
-									<form action="/auth/logout" method="POST">
-										<button type="submit" className="w-full text-left">
-											Logout
-										</button>
-									</form>
-								</DropdownMenuItem>
+								<span className="ml-2">/</span>
+								{breadcrumbs}
 							</>
-						) : (
-							<DropdownMenuItem asChild>
-								<Link to="/auth/login">Sign In</Link>
-							</DropdownMenuItem>
-						)}
-					</DropdownMenuContent>
-				</DropdownMenu>
-			</nav>
-			<main className="flex-1 p-4">
-				<Outlet />
-			</main>
+						) : null}
+					</div>
+					<DropdownMenu>
+						<DropdownMenuTrigger asChild>
+							<Button variant="ghost" size="icon">
+								<Settings className="h-5 w-5" />
+							</Button>
+						</DropdownMenuTrigger>
+						<DropdownMenuContent align="end">
+							{user ? (
+								<>
+									<DropdownMenuItem asChild>
+										<Link to="/app/profile">Account</Link>
+									</DropdownMenuItem>
+									<DropdownMenuItem asChild>
+										<form action="/auth/logout" method="POST">
+											<button type="submit" className="w-full text-left">
+												Logout
+											</button>
+										</form>
+									</DropdownMenuItem>
+								</>
+							) : (
+								<DropdownMenuItem asChild>
+									<Link to="/auth/login">Sign In</Link>
+								</DropdownMenuItem>
+							)}
+						</DropdownMenuContent>
+					</DropdownMenu>
+				</nav>
+				<main className="flex-1 p-4">
+					<Outlet />
+				</main>
+			</div>
 		</div>
 	)
 }

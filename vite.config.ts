@@ -38,8 +38,8 @@ export default defineConfig({
 			},
 		}),
 		sentryVitePlugin({
-			org: 'forgetyourbudget',
-			project: 'forgetyourbudget',
+			org: 'billing-saas',
+			project: 'billing-saas',
 			disable: process.env.NODE_ENV !== 'production',
 		}),
 	],

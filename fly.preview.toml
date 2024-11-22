@@ -1,4 +1,4 @@
-app = "forgetyourbudget-preview"
+app = "billing-saas-preview"
 primary_region = "atl"
 kill_signal = "SIGINT"
 kill_timeout = "5s"

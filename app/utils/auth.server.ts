@@ -2,6 +2,7 @@ import { type Password, type User } from '@prisma/client'
 import { redirect } from '@remix-run/node'
 import bcrypt from 'bcryptjs'
 import { safeRedirect } from 'remix-utils/safe-redirect'
+import { clearOrgId } from '#app/routes/api+/preferences+/organization/cookie.server.ts'
 import { prisma } from './db.server.ts'
 import { type FeatureFlags } from './featureFlags/index.ts'
 import { DEFAULT_ROUTE, combineHeaders } from './misc.tsx'
@@ -85,13 +86,17 @@ export async function logout(
 	// if this fails, we still need to delete the session from the user's browser
 	// and it doesn't do any harm staying in the db anyway.
 	if (sessionId) void prisma.session.deleteMany({ where: { id: sessionId } })
-	throw redirect(safeRedirect(redirectTo), {
-		...responseInit,
-		headers: combineHeaders(
-			{ 'set-cookie': await authSessionStorage.destroySession(authSession) },
-			responseInit?.headers,
-		),
-	})
+
+	let headers: HeadersInit = {
+		'set-cookie': await authSessionStorage.destroySession(authSession),
+	}
+	if (redirectTo) {
+		headers = combineHeaders(headers, { 'set-cookie': clearOrgId() })
+	}
+
+	console.log('headers', headers)
+
+	throw redirect(safeRedirect(redirectTo), { ...responseInit, headers })
 }
 
 export async function getPasswordHash(password: string) {
@@ -185,6 +190,7 @@ export async function signup({
 						},
 					},
 					password: { create: { hash: hashedPassword } },
+					organizations: { create: { name: 'Default' } },
 				},
 			},
 		},

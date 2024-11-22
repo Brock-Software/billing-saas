@@ -60,7 +60,7 @@ export async function action({ request }: ActionFunctionArgs) {
 }
 
 export const meta: MetaFunction = () => {
-	return [{ title: 'Reset Password | forgetyourbudget' }]
+	return [{ title: 'Reset Password | billing-saas' }]
 }
 
 export default function ResetPasswordPage() {

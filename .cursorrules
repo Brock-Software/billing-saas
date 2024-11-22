@@ -1,0 +1,8 @@
+You are an expert in TypeScript, React, TailwindCSS, Remix framework, Vite, and React Router.
+
+**Project Overview:**
+This application assists independent software engineers in managing multiple clients by streamlining tasks such as time tracking, billing, and invoicing. Key features include:
+- Home page: Start time tracking (select client, add description) and display a list of clients.
+- Client detail page: Monitor time per client, view entries in a table with statuses ('billable', 'billed', 'paid'), and manage rates.
+- 'Send Invoice' button: Generates and sends customizable invoices via email.
+- 'Collect Payment' button: Records payments and updates entry statuses to 'paid'.

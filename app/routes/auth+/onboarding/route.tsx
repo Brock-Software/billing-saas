@@ -89,7 +89,7 @@ export async function action({ request }: ActionFunctionArgs) {
 }
 
 export const meta: MetaFunction = () => {
-	return [{ title: 'Setup forgetyourbudget Account' }]
+	return [{ title: 'Setup billing-saas Account' }]
 }
 
 export default function SignupRoute() {
@@ -102,7 +102,7 @@ export default function SignupRoute() {
 		<div className="mx-auto w-full max-w-lg px-2 pb-20">
 			<div className="px-8 pt-4">
 				<Link to="/">
-					<h2 className="opacity-75">forgetyourbudget.com</h2>
+					<h2 className="opacity-75">billing-saas</h2>
 				</Link>
 				<div className="mb-8 mt-12 text-center md:text-left">
 					<p className="text-xl">Let's goooo.</p>

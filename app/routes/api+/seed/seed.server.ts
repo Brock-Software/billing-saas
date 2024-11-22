@@ -45,6 +45,7 @@ export const preview: () => Promise<SeedData> = async () => ({
 			name: 'Dev One',
 			hasSignedIn: false,
 			roles: { connect: { name: 'employee' } },
+			organizations: { create: { name: 'Default' } },
 		},
 		{
 			email: 'dev@two.com',
@@ -52,6 +53,7 @@ export const preview: () => Promise<SeedData> = async () => ({
 			name: 'Dev Two',
 			hasSignedIn: false,
 			roles: { connect: { name: 'employee' } },
+			organizations: { create: { name: 'Default' } },
 		},
 	],
 })

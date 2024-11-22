@@ -127,7 +127,7 @@ export default function VerifyRoute() {
 		<main className="mx-auto w-full max-w-[400px]">
 			<div className="flex flex-col gap-3 pt-4">
 				<Link to="/">
-					<h2 className="opacity-75">forgetyourbudget.com</h2>
+					<h2 className="opacity-75">billing-saas</h2>
 				</Link>
 				<div className="mb-8 mt-12 text-center md:text-left">
 					<p className="text-xl">Check your email</p>
