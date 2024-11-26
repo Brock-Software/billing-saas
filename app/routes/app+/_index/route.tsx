@@ -1,8 +1,13 @@
 import { type TimeEntry } from '@prisma/client'
-import { type ActionFunctionArgs, json } from '@remix-run/node'
+import {
+	type ActionFunctionArgs,
+	json,
+	type LoaderFunctionArgs,
+} from '@remix-run/node'
 import { Link, useLoaderData, useFetcher } from '@remix-run/react'
-import { Clock, Dot } from 'lucide-react'
+import { Clock } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
+import { TimeEntriesTable } from '#app/components/models/time-entries-table.tsx'
 import { Button } from '#app/components/ui/button'
 import { Input } from '#app/components/ui/input'
 
@@ -10,8 +15,12 @@ import { getOrgId } from '#app/routes/api+/preferences+/organization/cookie.serv
 import { prisma } from '#app/utils/db.server'
 import { Timer } from './timer'
 
-export async function loader() {
-	const [clients, activeTimeEntry] = await Promise.all([
+export async function loader({ request }: LoaderFunctionArgs) {
+	const url = new URL(request.url)
+	const skip = parseInt(url.searchParams.get('skip') || '0', 10)
+	const take = parseInt(url.searchParams.get('take') || '10', 10)
+
+	const [clients, activeTimeEntry, entries, entriesCount] = await Promise.all([
 		prisma.client.findMany({
 			take: 5,
 			select: {
@@ -28,9 +37,16 @@ export async function loader() {
 			},
 		}),
 		prisma.timeEntry.findFirst({ where: { endTime: null } }),
+		prisma.timeEntry.findMany({
+			skip,
+			take,
+			orderBy: { startTime: 'desc' },
+			include: { client: true, invoice: { select: { status: true } } },
+		}),
+		prisma.timeEntry.count(),
 	])
 
-	return { clients, activeTimeEntry }
+	return { clients, activeTimeEntry, entries, entriesCount }
 }
 
 export async function action({ request }: ActionFunctionArgs) {
@@ -109,7 +125,8 @@ export async function action({ request }: ActionFunctionArgs) {
 }
 
 export default function TimePage() {
-	const { clients, activeTimeEntry } = useLoaderData<typeof loader>()
+	const { clients, activeTimeEntry, entries, entriesCount } =
+		useLoaderData<typeof loader>()
 	const startTimer = useFetcher<{ entry: TimeEntry | null }>()
 	const [entry, setEntry] = useState<typeof activeTimeEntry>(activeTimeEntry)
 
@@ -170,10 +187,6 @@ export default function TimePage() {
 				<div className="flex items-center">
 					<Button variant="link" asChild>
 						<Link to="clients">Clients</Link>
-					</Button>
-					<Dot />
-					<Button variant="link" asChild>
-						<Link to="time-entries">Time Entries</Link>
 					</Button>
 				</div>
 			</div>
@@ -243,6 +256,12 @@ export default function TimePage() {
 					</Button>
 				</div>
 			</div>
+
+			<TimeEntriesTable
+				entries={entries as any}
+				entriesCount={entriesCount}
+				clients={clients as any}
+			/>
 		</div>
 	)
 }

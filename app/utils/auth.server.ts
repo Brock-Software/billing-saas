@@ -94,8 +94,6 @@ export async function logout(
 		headers = combineHeaders(headers, { 'set-cookie': clearOrgId() })
 	}
 
-	console.log('headers', headers)
-
 	throw redirect(safeRedirect(redirectTo), { ...responseInit, headers })
 }
 

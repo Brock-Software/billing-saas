@@ -19,3 +19,7 @@ type JsonifyArray<T> = T extends Date | null
 		: T extends object | null
 			? JsonifyObject<T>[]
 			: T[]
+
+type LoaderData<T extends LoaderFunction> = JsonifyObject<
+	Awaited<ReturnType<Awaited<ReturnType<T>>['json']>>
+>
