@@ -32,6 +32,14 @@ function parseDurationToMs(duration: string) {
 	return (hours * 3600 + minutes * 60 + seconds) * 1000
 }
 
+function formatUTCForDatetimeLocal(utcIsoString: string) {
+	const date = new Date(utcIsoString)
+	const tzOffset = date.getTimezoneOffset()
+	const localDate = new Date(date.getTime() - tzOffset * 60000)
+	const formattedDate = localDate.toISOString().slice(0, 16)
+	return formattedDate
+}
+
 export async function loader({ request }: LoaderFunctionArgs) {
 	const url = new URL(request.url)
 	const skip = parseInt(url.searchParams.get('skip') || '0', 10)
@@ -161,6 +169,8 @@ export default function Index() {
 									60
 								: 0
 
+							console.log(entry.startTime)
+
 							return (
 								<TableRow key={entry.id} className="group hover:bg-gray-100">
 									<TableCell>
@@ -220,9 +230,9 @@ export default function Index() {
 											<input
 												type="datetime-local"
 												className="bg-transparent"
-												defaultValue={new Date(entry.startTime)
-													.toLocaleString('sv', { timeZoneName: 'short' })
-													.slice(0, 16)}
+												defaultValue={formatUTCForDatetimeLocal(
+													entry.startTime,
+												)}
 												onBlur={event => {
 													if (!event.target.value) return
 													const f = new FormData()
@@ -240,9 +250,9 @@ export default function Index() {
 												<input
 													type="datetime-local"
 													className="bg-transparent"
-													defaultValue={new Date(entry.endTime)
-														.toLocaleString('sv', { timeZoneName: 'short' })
-														.slice(0, 16)}
+													defaultValue={formatUTCForDatetimeLocal(
+														entry.endTime,
+													)}
 													onBlur={event => {
 														if (!event.target.value) return
 														const f = new FormData()

@@ -2,7 +2,7 @@ import { type TimeEntry } from '@prisma/client'
 import { type ActionFunctionArgs, json } from '@remix-run/node'
 import { Link, useLoaderData, useFetcher } from '@remix-run/react'
 import { Clock, Dot } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Button } from '#app/components/ui/button'
 import { Input } from '#app/components/ui/input'
 
@@ -113,21 +113,16 @@ export default function TimePage() {
 	const startTimer = useFetcher<{ entry: TimeEntry | null }>()
 	const [entry, setEntry] = useState<typeof activeTimeEntry>(activeTimeEntry)
 
+	const descriptionRef = useRef<HTMLInputElement>(null)
+	const clientIdRef = useRef<HTMLSelectElement>(null)
+
 	const handleStart = () => {
 		const f = new FormData()
 		f.append('model', 'time_entry')
 		f.append('intent', 'start')
 		f.append('startTime', new Date().toISOString())
-		f.append(
-			'clientId',
-			(document.querySelector('select[name="clientId"]') as HTMLSelectElement)
-				?.value ?? '',
-		)
-		f.append(
-			'description',
-			(document.querySelector('input[name="description"]') as HTMLInputElement)
-				?.value ?? '',
-		)
+		f.append('clientId', clientIdRef.current?.value ?? '')
+		f.append('description', descriptionRef.current?.value ?? '')
 		startTimer.submit(f, { method: 'post' })
 	}
 
@@ -138,6 +133,8 @@ export default function TimePage() {
 		f.append('intent', 'stop')
 		f.append('entryId', entry.id)
 		startTimer.submit(f, { method: 'post' })
+		if (descriptionRef.current) descriptionRef.current.value = ''
+		if (clientIdRef.current) clientIdRef.current.value = ''
 	}
 
 	const handleDescriptionBlur = (event: React.FocusEvent<HTMLInputElement>) => {
@@ -189,6 +186,7 @@ export default function TimePage() {
 						onBlur={handleDescriptionBlur}
 						className="w-full bg-white"
 						name="description"
+						ref={descriptionRef}
 					/>
 
 					<select
@@ -196,6 +194,7 @@ export default function TimePage() {
 						onChange={e => handleClientChange(e.target.value)}
 						defaultValue={entry?.clientId ?? ''}
 						name="clientId"
+						ref={clientIdRef}
 					>
 						<option value="">Select Client</option>
 						{clients.map(client => (

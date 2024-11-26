@@ -120,7 +120,7 @@ export default function SignupRoute() {
 			<div className="mb-8 mt-12 text-center md:text-left">
 				<p className="text-xl">Get started</p>
 				<p className="text-foreground/70">
-					Create an account to start building..
+					Create an account to start billing.
 				</p>
 			</div>
 			<ValidatedForm method="POST" validator={validator}>

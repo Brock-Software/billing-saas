@@ -1,4 +1,5 @@
-import { Link, Outlet, useLocation } from '@remix-run/react'
+import { type LoaderFunctionArgs } from '@remix-run/node'
+import { json, Link, Outlet, useLocation } from '@remix-run/react'
 import capitalize from 'lodash/capitalize'
 import { Settings } from 'lucide-react'
 import { Button } from '#app/components/ui/button'
@@ -9,8 +10,14 @@ import {
 	DropdownMenuTrigger,
 } from '#app/components/ui/dropdown-menu.js'
 import { useUser } from '#app/hooks/useUser.js'
+import { requireUserId } from '#app/utils/auth.server.ts'
 
-export default function AuthLayout() {
+export const loader = async ({ request }: LoaderFunctionArgs) => {
+	const user = await requireUserId(request)
+	return json({ user })
+}
+
+export default function Route() {
 	const user = useUser()
 	const location = useLocation()
 

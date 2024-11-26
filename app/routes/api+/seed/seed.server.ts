@@ -18,13 +18,11 @@ export const permissions: SeedData['permissions'] = [
 	{ entity: 'user', action: 'delete', access: 'any' },
 ]
 
-export const featureFlags: SeedData['featureFlags'] = [
-	{ name: 'courses', isEnabled: true },
-]
+export const featureFlags: SeedData['featureFlags'] = []
 
 const roles: () => Promise<SeedData['roles']> = async () => [
 	{
-		name: 'employee',
+		name: 'user',
 		permissions: {
 			connect: await prisma.permission.findMany({
 				select: { id: true },
@@ -44,7 +42,7 @@ export const preview: () => Promise<SeedData> = async () => ({
 			password: { create: { hash: await getPasswordHash('password') } },
 			name: 'Dev One',
 			hasSignedIn: false,
-			roles: { connect: { name: 'employee' } },
+			roles: { connect: { name: 'user' } },
 			organizations: { create: { name: 'Default' } },
 		},
 		{
@@ -52,8 +50,15 @@ export const preview: () => Promise<SeedData> = async () => ({
 			password: { create: { hash: await getPasswordHash('password') } },
 			name: 'Dev Two',
 			hasSignedIn: false,
-			roles: { connect: { name: 'employee' } },
+			roles: { connect: { name: 'user' } },
 			organizations: { create: { name: 'Default' } },
 		},
 	],
+})
+
+export const production: () => Promise<SeedData> = async () => ({
+	roles: await roles(),
+	featureFlags,
+	permissions,
+	users: [],
 })
