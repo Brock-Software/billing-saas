@@ -61,6 +61,26 @@ export default function ClientDetailsRoute() {
 	const { client } = useLoaderData<typeof loader>()
 	const [isEditing, setIsEditing] = useState(false)
 
+	const totalDuration = client.timeEntries.reduce((acc, entry) => {
+		const duration = entry.endTime
+			? (new Date(entry.endTime).getTime() -
+					new Date(entry.startTime).getTime()) /
+				1000 /
+				60 /
+				60
+			: 0
+		return acc + duration
+	}, 0)
+
+	const totalAmount = totalDuration * Number(client.hourlyRate)
+
+	const formatAmount = (amount: number) => {
+		return amount.toLocaleString('en-US', {
+			minimumFractionDigits: 2,
+			maximumFractionDigits: 2,
+		})
+	}
+
 	return (
 		<div className="flex flex-col gap-4 p-4">
 			{isEditing ? (
@@ -138,7 +158,7 @@ export default function ClientDetailsRoute() {
 								</TableCell>
 								<TableCell>{entry.description}</TableCell>
 								<TableCell>{duration.toFixed(2)} hrs</TableCell>
-								<TableCell>${amount.toFixed(2)}</TableCell>
+								<TableCell>${formatAmount(amount)}</TableCell>
 								<TableCell>
 									{entry.invoiceId
 										? 'Billed'
@@ -149,6 +169,13 @@ export default function ClientDetailsRoute() {
 							</TableRow>
 						)
 					})}
+					<TableRow className="font-medium">
+						<TableCell>Total</TableCell>
+						<TableCell />
+						<TableCell>{totalDuration.toFixed(2)} hrs</TableCell>
+						<TableCell>${formatAmount(totalAmount)}</TableCell>
+						<TableCell />
+					</TableRow>
 				</TableBody>
 			</Table>
 		</div>
