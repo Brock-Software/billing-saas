@@ -34,7 +34,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 			skip,
 			take,
 			orderBy: { startTime: 'desc' },
-			include: { client: true, invoice: { select: { status: true } } },
+			include: { client: true, invoice: true },
 		}),
 		prisma.timeEntry.count(),
 		prisma.client.findMany({

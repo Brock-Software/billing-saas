@@ -223,9 +223,11 @@ export function TimeEntriesTable({ entries, entriesCount, clients }: Props) {
 									</TableCell>
 									<TableCell>
 										{entry.invoice
-											? entry.invoice.status === 'PAID'
+											? entry.invoice.paidAt
 												? 'Paid'
-												: 'Billed'
+												: new Date(entry.invoice.dueDate) < new Date()
+													? 'Overdue'
+													: 'Billed'
 											: entry.endTime
 												? 'Completed'
 												: 'In Progress'}
