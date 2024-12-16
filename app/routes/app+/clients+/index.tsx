@@ -28,10 +28,10 @@ import {
 import { getOrgId } from '#app/routes/api+/preferences+/organization/cookie.server.ts'
 import { prisma } from '#app/utils/db.server.ts'
 
-export async function loader() {
+export async function loader({ request }: ActionFunctionArgs) {
+	const orgId = getOrgId(request)!
 	const [clients] = await Promise.all([
 		prisma.client.findMany({
-			take: 5,
 			select: {
 				id: true,
 				name: true,
@@ -45,6 +45,7 @@ export async function loader() {
 					},
 				},
 			},
+			where: { organization: { id: orgId } },
 		}),
 	])
 
