@@ -172,7 +172,7 @@ function Document({
 				<meta name="theme-color" content="#ffffff" />
 				<Links />
 			</head>
-			<body className="h-screen">
+			<body>
 				<div className="h-full rounded-lg bg-background" vaul-drawer-wrapper="">
 					{children}
 				</div>
@@ -208,7 +208,7 @@ function App() {
 	return (
 		<Document nonce={nonce} theme={theme} env={data.ENV}>
 			<GlobalLoading />
-			<div className="flex h-screen min-h-screen flex-col justify-between">
+			<div className="flex min-h-screen flex-col justify-between">
 				<div className="flex-1">
 					<Outlet />
 				</div>

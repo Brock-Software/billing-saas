@@ -36,6 +36,39 @@ export const preview: () => Promise<SeedData> = async () => ({
 	roles: await roles(),
 	featureFlags,
 	permissions,
+	organizations: [
+		{
+			name: 'Default',
+		},
+	],
+	clients: [
+		{
+			name: 'Client One',
+			hourlyRate: 100,
+		},
+		{
+			name: 'Client Two',
+			hourlyRate: 150,
+		},
+	],
+	timeEntries: [
+		{
+			description: 'Client One',
+			startTime: new Date(),
+			endTime: new Date(),
+			hourlyRate: 100,
+			organization: { connect: { name: 'Default' } },
+			client: { connect: { name: 'Client One' } },
+		},
+		{
+			description: 'Client Two',
+			startTime: new Date(),
+			endTime: new Date(),
+			hourlyRate: 150,
+			organization: { connect: { name: 'Default' } },
+			client: { connect: { name: 'Client Two' } },
+		},
+	],
 	users: [
 		{
 			email: 'dev@one.com',

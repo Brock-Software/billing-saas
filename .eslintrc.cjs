@@ -89,5 +89,14 @@ module.exports = {
 				},
 			},
 		},
+		{
+			files: ['*.html'],
+			extends: ['plugin:@html-eslint/recommended'],
+			parser: '@html-eslint/parser',
+			rules: {
+				'@html-eslint/require-closing-tags': 'off',
+				'@html-eslint/indent': 'off',
+			},
+		},
 	],
 }

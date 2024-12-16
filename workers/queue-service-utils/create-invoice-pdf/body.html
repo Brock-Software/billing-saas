@@ -1,0 +1,138 @@
+<html lang="en">
+  <head>
+    <meta charset="UTF-8"></meta>
+    <style>
+      @page {
+        margin: 0.5in;
+      }
+
+      * {
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 12px;
+        margin: 0;
+        padding: 0;
+      }
+
+      .text-2xl {
+        font-size: 24px;
+      }
+
+      .text-gray-600 {
+        color: #4B5563;
+      }
+
+      .font-bold {
+        font-weight: bold;
+      }
+
+      hr {
+        margin: 16px 0;
+        border: 0;
+        border-top: 1px solid #E5E7EB;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 32px 0;
+      }
+
+      th {
+        text-align: left;
+        padding: 8px;
+        border-bottom: 1px solid #E5E7EB;
+      }
+
+      td {
+        padding: 8px;
+        border-bottom: 1px solid #E5E7EB;
+      }
+
+      .text-right {
+        text-align: right;
+      }
+
+      .border-t-2 {
+        border-top: 2px solid #E5E7EB;
+      }
+    </style>
+  </head>
+  <body>
+    <div style="display: flex; justify-content: space-between">
+      <div>
+        <h1 class="text-2xl font-bold">{{invoice.client.organization.name}}</h1>
+        <p class="text-gray-600">
+          {{invoice.client.organization.line1}}<br />
+          {{#invoice.client.organization.line2}}{{invoice.client.organization.line2}}<br />{{/invoice.client.organization.line2}}
+          {{invoice.client.organization.city}}, {{invoice.client.organization.state}} {{invoice.client.organization.zip}}<br />
+          {{#invoice.client.organization.phone}}{{invoice.client.organization.phone}}<br />{{/invoice.client.organization.phone}}
+          {{invoice.client.organization.email}}
+        </p>
+      </div>
+      <div style="text-align: right">
+        <p class="font-bold">INVOICE</p>
+        <p class="text-gray-600">
+          Date: {{invoice.createdAt}}<br />
+          Due Date: {{invoice.dueDate}}<br />
+          Invoice #: {{invoice.number}}
+        </p>
+      </div>
+    </div>
+
+    <hr />
+
+    <div>
+      <p class="font-bold">Bill To:</p>
+      <p>
+        {{invoice.client.name}}<br />
+        {{invoice.client.organization.name}}<br />
+        {{invoice.client.organization.line1}}<br />
+        {{#invoice.client.organization.line2}}{{invoice.client.organization.line2}}<br />{{/invoice.client.organization.line2}}
+        {{invoice.client.organization.city}}, {{invoice.client.organization.state}} {{invoice.client.organization.zip}}
+      </p>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Description</th>
+          <th class="text-right">Hours</th>
+          <th class="text-right">Rate</th>
+          <th class="text-right">Amount</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{#invoice.timeEntries}}
+        <tr>
+          <td>{{date}}</td>
+          <td>{{description}}</td>
+          <td class="text-right">{{hours}}</td>
+          <td class="text-right">${{rate}}</td>
+          <td class="text-right">${{amount}}</td>
+        </tr>
+        {{/invoice.timeEntries}}
+        <tr class="border-t-2">
+          <td colspan="4" class="text-right font-bold">Subtotal:</td>
+          <td class="text-right">${{invoice.subtotal}}</td>
+        </tr>
+        {{#invoice.tax}}
+        <tr>
+          <td colspan="4" class="text-right">Tax ({{invoice.tax}}%):</td>
+          <td class="text-right">${{invoice.taxAmount}}</td>
+        </tr>
+        {{/invoice.tax}}
+        {{#invoice.discount}}
+        <tr>
+          <td colspan="4" class="text-right">Discount:</td>
+          <td class="text-right">-${{invoice.discount}}</td>
+        </tr>
+        {{/invoice.discount}}
+        <tr>
+          <td colspan="4" class="text-right font-bold">Total:</td>
+          <td class="text-right">${{invoice.total}}</td>
+        </tr>
+      </tbody>
+    </table>
+  </body>
+</html>
