@@ -1,5 +1,5 @@
 import { Check, PlusCircle } from 'lucide-react'
-import { useLocalStorage } from 'usehooks-ts'
+import { useSearchParams } from '@remix-run/react'
 import { Badge } from '#app/components/ui/badge.tsx'
 import { Button } from '#app/components/ui/button.tsx'
 import {
@@ -21,19 +21,19 @@ import { cn } from '#app/utils/misc.tsx'
 
 export const ClientFilter = ({
 	options,
+	onChange,
 }: {
 	options: { label: string; value: string }[]
+	onChange?: (values: string[]) => void
 }) => {
-	const [selectedValues, setSelectedValues] = useLocalStorage<string[]>(
-		'selectedClients',
-		[],
-	)
+	const [searchParams] = useSearchParams()
+	const selectedValues = searchParams.get('clients')?.split(',') || []
 
 	return (
 		<Popover>
 			<PopoverTrigger asChild>
-				<Button variant="outline" size="sm" className="h-8 border-dashed">
-					<PlusCircle />
+				<Button variant="outline" className="h-8 gap-1 border-dashed">
+					<PlusCircle size={16} />
 					Client
 					{selectedValues?.length > 0 && (
 						<>
@@ -82,15 +82,10 @@ export const ClientFilter = ({
 									<CommandItem
 										key={option.value}
 										onSelect={() => {
-											if (isSelected) {
-												setSelectedValues(
-													selectedValues.filter(
-														value => value !== option.value,
-													),
-												)
-											} else {
-												setSelectedValues([...selectedValues, option.value])
-											}
+											const newValues = isSelected
+												? selectedValues.filter(value => value !== option.value)
+												: [...selectedValues, option.value]
+											onChange?.(newValues)
 										}}
 									>
 										<div
@@ -113,7 +108,7 @@ export const ClientFilter = ({
 								<CommandSeparator />
 								<CommandGroup>
 									<CommandItem
-										onSelect={() => setSelectedValues([])}
+										onSelect={() => onChange?.([])}
 										className="justify-center text-center"
 									>
 										Clear filters
