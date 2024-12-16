@@ -1,5 +1,5 @@
+import { useSearchParams } from '@remix-run/react'
 import {
-	addDays,
 	format,
 	startOfMonth,
 	endOfMonth,
@@ -12,7 +12,6 @@ import {
 import { CalendarIcon } from 'lucide-react'
 import * as React from 'react'
 import { type DateRange } from 'react-day-picker'
-import { useSearchParams } from '@remix-run/react'
 import { Button } from '#app/components/ui/button.tsx'
 import { Calendar } from '#app/components/ui/calendar.tsx'
 import {

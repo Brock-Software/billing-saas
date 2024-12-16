@@ -1,21 +1,20 @@
 import {
 	json,
-	redirect,
 	type LoaderFunctionArgs,
 	type ActionFunctionArgs,
 } from '@remix-run/node'
 import { Form, Link, useLoaderData } from '@remix-run/react'
+import { withZod } from '@remix-validated-form/with-zod'
 import { useState } from 'react'
+import { validationError } from 'remix-validated-form'
+import { z } from 'zod'
+import { zfd } from 'zod-form-data'
 import { Button } from '#app/components/ui/button.tsx'
 import { Input } from '#app/components/ui/input.tsx'
-import { prisma } from '#app/utils/db.server.ts'
 import { getOrgId } from '#app/routes/api+/preferences+/organization/cookie.server.ts'
 import { requireUserId } from '#app/utils/auth.server.ts'
-import { z } from 'zod'
-import { withZod } from '@remix-validated-form/with-zod'
-import { validationError } from 'remix-validated-form'
+import { prisma } from '#app/utils/db.server.ts'
 import { redirectWithToast } from '#app/utils/toast.server.ts'
-import { zfd } from 'zod-form-data'
 
 export async function loader({ request }: LoaderFunctionArgs) {
 	const orgId = getOrgId(request)!

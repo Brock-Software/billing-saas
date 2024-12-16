@@ -16,12 +16,11 @@ import { useEffect, useRef, useState } from 'react'
 import { TimeEntriesTable } from '#app/components/models/time-entries-table.tsx'
 import { Button } from '#app/components/ui/button'
 import { Input } from '#app/components/ui/input'
-import { ClientFilter } from './reports/client-filter'
-import { CalendarDateRangePicker } from './reports/date-range-filter'
-import { type DateRange } from 'react-day-picker'
-
 import { getOrgId } from '#app/routes/api+/preferences+/organization/cookie.server.ts'
 import { prisma } from '#app/utils/db.server'
+import { ClientFilter } from './reports/client-filter'
+import { CalendarDateRangePicker } from './reports/date-range-filter'
+
 import { Timer } from './timer'
 
 export async function loader({ request }: LoaderFunctionArgs) {

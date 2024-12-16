@@ -13,10 +13,10 @@ import {
 import { z } from 'zod'
 import { FormInput } from '#app/components/forms/form-input.js'
 import { Button } from '#app/components/ui/button'
+import { setOrgId } from '#app/routes/api+/preferences+/organization/cookie.server.ts'
 import { requireUserId } from '#app/utils/auth.server.ts'
 import { prisma } from '#app/utils/db.server.ts'
 import { NameSchema } from '#app/utils/schemas/user'
-import { setOrgId } from '#app/routes/api+/preferences+/organization/cookie.server.ts'
 
 export const handle = { showBackButton: true }
 

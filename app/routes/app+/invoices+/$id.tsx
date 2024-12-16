@@ -4,8 +4,8 @@ import {
 	type ActionFunctionArgs,
 } from '@remix-run/node'
 import { useLoaderData, Form } from '@remix-run/react'
-import { prisma } from '#app/utils/db.server'
 import { Button } from '#app/components/ui/button'
+import { prisma } from '#app/utils/db.server'
 import { redirectWithToast } from '#app/utils/toast.server'
 
 export async function loader({ params }: LoaderFunctionArgs) {
