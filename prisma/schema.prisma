@@ -192,6 +192,7 @@ model Setting {
 model Client {
   id           String       @id @default(cuid())
   createdAt    DateTime     @default(now())
+  deletedAt    DateTime?
   updatedAt    DateTime     @updatedAt
   name         String
   email        String?

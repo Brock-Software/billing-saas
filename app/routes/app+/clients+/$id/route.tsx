@@ -2,15 +2,26 @@ import {
 	type LoaderFunctionArgs,
 	type ActionFunctionArgs,
 	json,
+	redirect,
 } from '@remix-run/node'
-import { useFetcher, useLoaderData } from '@remix-run/react'
+import { Form, useFetcher, useLoaderData } from '@remix-run/react'
 import { withZod } from '@remix-validated-form/with-zod'
-import { Pencil } from 'lucide-react'
+import { Pencil, Trash2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { ValidatedForm, validationError } from 'remix-validated-form'
 import { z } from 'zod'
 import { FormInput } from '#app/components/forms/form-input'
 import { FormSelect } from '#app/components/forms/form-select.tsx'
+import {
+	AlertDialog,
+	AlertDialogCancel,
+	AlertDialogContent,
+	AlertDialogDescription,
+	AlertDialogFooter,
+	AlertDialogHeader,
+	AlertDialogTitle,
+	AlertDialogTrigger,
+} from '#app/components/ui/alert-dialog'
 import { Button } from '#app/components/ui/button'
 
 import {
@@ -67,6 +78,16 @@ const validator = withZod(
 
 export async function action({ request, params }: ActionFunctionArgs) {
 	const formData = await request.formData()
+	const intent = formData.get('intent')
+
+	if (intent === 'delete') {
+		await prisma.client.update({
+			where: { id: params.id },
+			data: { deletedAt: new Date() },
+		})
+		return redirect('/app/clients')
+	}
+
 	const { data, error } = await validator.validate(formData)
 	if (error) return validationError(error)
 
@@ -122,13 +143,45 @@ export default function ClientDetailsRoute() {
 						<p className="mb-2 text-2xl font-semibold text-gray-800">
 							{client.name}
 						</p>
-						<Button
-							onClick={() => setIsEditing(true)}
-							size="icon"
-							variant="ghost"
-						>
-							<Pencil size={16} />
-						</Button>
+						<div className="flex items-center gap-2">
+							<Button
+								onClick={() => setIsEditing(true)}
+								size="icon"
+								variant="ghost"
+							>
+								<Pencil size={16} />
+							</Button>
+
+							<AlertDialog>
+								<Button asChild size="icon" variant="ghost">
+									<AlertDialogTrigger>
+										<Trash2 size={16} className="text-red-600" />
+									</AlertDialogTrigger>
+								</Button>
+								<AlertDialogContent>
+									<AlertDialogHeader>
+										<AlertDialogTitle>Are you sure?</AlertDialogTitle>
+										<AlertDialogDescription>
+											This action will mark the client as deleted. You won't be
+											able to see them in your client list anymore.
+										</AlertDialogDescription>
+									</AlertDialogHeader>
+									<AlertDialogFooter>
+										<AlertDialogCancel>Cancel</AlertDialogCancel>
+										<Form method="POST">
+											<input type="hidden" name="intent" value="delete" />
+											<Button
+												variant="destructive"
+												type="submit"
+												className="px-3"
+											>
+												Delete
+											</Button>
+										</Form>
+									</AlertDialogFooter>
+								</AlertDialogContent>
+							</AlertDialog>
+						</div>
 					</div>
 					<div className="mt-2 flex items-center gap-6">
 						<p className="text-sm text-gray-600">

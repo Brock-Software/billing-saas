@@ -20,7 +20,6 @@ import { getOrgId } from '#app/routes/api+/preferences+/organization/cookie.serv
 import { prisma } from '#app/utils/db.server'
 import { ClientFilter } from './reports/client-filter'
 import { CalendarDateRangePicker } from './reports/date-range-filter'
-
 import { Timer } from './timer'
 
 export async function loader({ request }: LoaderFunctionArgs) {

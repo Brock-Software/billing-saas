@@ -26,17 +26,21 @@ function formatUTCForDatetimeLocal(utcIsoString: string) {
 	return formattedDate
 }
 
-const FORM_ACTION = '/app/time-entries'
-
 type Props = {
 	entries: JsonifyObject<
 		TimeEntry & { client: Client | null; invoice: Invoice | null }
 	>[]
 	entriesCount: number
 	clients: JsonifyObject<Client>[]
+	formAction?: string
 }
 
-export function TimeEntriesTable({ entries, entriesCount, clients }: Props) {
+export function TimeEntriesTable({
+	entries,
+	entriesCount,
+	clients,
+	formAction = '/app/time-entries',
+}: Props) {
 	const fetcher = useFetcher()
 
 	return (
@@ -79,7 +83,7 @@ export function TimeEntriesTable({ entries, entriesCount, clients }: Props) {
 												f.append('clientId', event.target.value)
 												fetcher.submit(f, {
 													method: 'post',
-													action: FORM_ACTION,
+													action: formAction,
 												})
 											}}
 										>
@@ -103,7 +107,7 @@ export function TimeEntriesTable({ entries, entriesCount, clients }: Props) {
 												f.append('description', event.target.value)
 												fetcher.submit(f, {
 													method: 'post',
-													action: FORM_ACTION,
+													action: formAction,
 												})
 											}}
 										/>
@@ -123,7 +127,7 @@ export function TimeEntriesTable({ entries, entriesCount, clients }: Props) {
 													f.append('duration', event.target.value)
 													fetcher.submit(f, {
 														method: 'post',
-														action: FORM_ACTION,
+														action: formAction,
 													})
 												}}
 											/>
@@ -148,7 +152,7 @@ export function TimeEntriesTable({ entries, entriesCount, clients }: Props) {
 													)
 													fetcher.submit(f, {
 														method: 'post',
-														action: FORM_ACTION,
+														action: formAction,
 													})
 												}}
 											/>
@@ -171,7 +175,7 @@ export function TimeEntriesTable({ entries, entriesCount, clients }: Props) {
 														)
 														fetcher.submit(f, {
 															method: 'post',
-															action: FORM_ACTION,
+															action: formAction,
 														})
 													}}
 												/>
@@ -208,7 +212,7 @@ export function TimeEntriesTable({ entries, entriesCount, clients }: Props) {
 													f.append('hourlyRate', event.target.value)
 													fetcher.submit(f, {
 														method: 'post',
-														action: FORM_ACTION,
+														action: formAction,
 													})
 												}}
 											/>
@@ -247,7 +251,7 @@ export function TimeEntriesTable({ entries, entriesCount, clients }: Props) {
 														f.append('entryId', entry.id)
 														fetcher.submit(f, {
 															method: 'post',
-															action: FORM_ACTION,
+															action: formAction,
 														})
 													}}
 												>
@@ -265,7 +269,7 @@ export function TimeEntriesTable({ entries, entriesCount, clients }: Props) {
 														f.append('entryId', entry.id)
 														fetcher.submit(f, {
 															method: 'post',
-															action: FORM_ACTION,
+															action: formAction,
 														})
 													}}
 												>
@@ -279,7 +283,7 @@ export function TimeEntriesTable({ entries, entriesCount, clients }: Props) {
 														f.append('entryId', entry.id)
 														fetcher.submit(f, {
 															method: 'post',
-															action: FORM_ACTION,
+															action: formAction,
 														})
 													}}
 												>

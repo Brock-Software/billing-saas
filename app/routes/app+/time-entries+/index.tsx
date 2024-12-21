@@ -9,6 +9,7 @@ import { validationError } from 'remix-validated-form'
 import { z } from 'zod'
 
 import { TimeEntriesTable } from '#app/components/models/time-entries-table.tsx'
+import { TimeEntry } from '#app/domain/TimeEntry.ts'
 import { getOrgId } from '#app/routes/api+/preferences+/organization/cookie.server.ts'
 import { prisma } from '#app/utils/db.server.ts'
 
@@ -62,27 +63,14 @@ export async function action({ request }: ActionFunctionArgs) {
 
 	switch (intent) {
 		case 'start': {
-			const entryId = formData.get('entryId')
-			const entry = await prisma.timeEntry.findUniqueOrThrow({
-				where: { id: entryId as string },
+			await TimeEntry.startNewEntryFromExisting({
+				entryId: formData.get('entryId') as string,
+				orgId: getOrgId(request)!,
 			})
-
-			// Stop any existing running entries
-			await prisma.timeEntry.updateMany({
-				where: {
-					endTime: null,
-					client: { organization: { id: getOrgId(request)! } },
-				},
-				data: { endTime: new Date().toISOString() },
-			})
-
-			// Create new entry with same data
-			const { id, createdAt, updatedAt, endTime, ...entryData } = entry
-			await prisma.timeEntry.create({
-				data: { ...entryData, startTime: new Date().toISOString() },
-			})
-
-			return json({ success: true })
+			return json(
+				{ success: true },
+				{ headers: { 'X-Remix-Revalidate': '/app+/_index/route' } },
+			)
 		}
 		case 'stop': {
 			const entryId = formData.get('entryId')

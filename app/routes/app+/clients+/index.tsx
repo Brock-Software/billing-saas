@@ -44,7 +44,7 @@ export async function loader({ request }: ActionFunctionArgs) {
 					},
 				},
 			},
-			where: { organization: { id: orgId } },
+			where: { organization: { id: orgId }, deletedAt: null },
 		}),
 	])
 
