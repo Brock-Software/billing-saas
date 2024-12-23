@@ -61,7 +61,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 						},
 					},
 				},
-				where: { organization: { id: orgId! } },
+				where: { organization: { id: orgId! }, deletedAt: null },
 			}),
 			prisma.timeEntry.findFirst({ where: { endTime: null } }),
 			prisma.timeEntry.findMany({
