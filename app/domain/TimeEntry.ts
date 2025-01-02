@@ -6,11 +6,11 @@ export class TimeEntry {
 			where: { id: entryId },
 		})
 
-		// Stop all running entries for the same org
+		// Stop all running entries for the same org (only if the org has enabled auto-stop)
 		await prisma.timeEntry.updateMany({
 			where: {
 				endTime: null,
-				client: { organization: { id: orgId } },
+				client: { organization: { id: orgId, autoStop: true } },
 			},
 			data: { endTime: new Date().toISOString() },
 		})

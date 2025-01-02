@@ -395,7 +395,10 @@ export function TimeEntriesTable({
 												<DropdownMenuItem
 													onSelect={() => {
 														const f = new FormData()
-														f.append('intent', entry.endTime ? 'start' : 'stop')
+														f.append(
+															'intent',
+															entry.endTime ? 'duplicate-and-start' : 'stop',
+														)
 														f.append('entryId', entry.id)
 														fetcher.submit(f, {
 															method: 'post',

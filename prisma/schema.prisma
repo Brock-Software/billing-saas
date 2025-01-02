@@ -42,6 +42,7 @@ model Organization {
   zip       String?
   phone     String?
   email     String?
+  autoStop  Boolean  @default(true)
   users     User[]
   clients   Client[]
 
