@@ -11,8 +11,10 @@ import {
 	FieldArray,
 } from 'remix-validated-form'
 import { z } from 'zod'
+import { zfd } from 'zod-form-data'
 import { FormInput } from '#app/components/forms/form-input.js'
 import { Button } from '#app/components/ui/button'
+import { Switch } from '#app/components/ui/switch'
 import { setOrgId } from '#app/routes/api+/preferences+/organization/cookie.server.ts'
 import { requireUserId } from '#app/utils/auth.server.ts'
 import { prisma } from '#app/utils/db.server.ts'
@@ -39,6 +41,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 					zip: true,
 					phone: true,
 					email: true,
+					autoStop: true,
 				},
 			},
 			image: { select: { id: true } },
@@ -71,6 +74,7 @@ const validator = withZod(
 				zip: z.string().nullish(),
 				phone: z.string().nullish(),
 				email: z.string().nullish(),
+				autoStop: zfd.checkbox(),
 			}),
 		),
 	}),
@@ -104,6 +108,7 @@ export async function action({ request }: ActionFunctionArgs) {
 						zip: org.zip,
 						phone: org.phone,
 						email: org.email,
+						autoStop: org.autoStop,
 					},
 					update: {
 						name: org.name,
@@ -114,6 +119,7 @@ export async function action({ request }: ActionFunctionArgs) {
 						zip: org.zip,
 						phone: org.phone,
 						email: org.email,
+						autoStop: org.autoStop,
 					},
 				})),
 			},
@@ -217,6 +223,15 @@ export default function ProfileRoute() {
 													label="Email"
 													type="email"
 												/>
+												<div className="flex items-center gap-2">
+													<Switch
+														name={`organizations[${index}].autoStop`}
+														defaultChecked={field.defaultValue.autoStop}
+													/>
+													<span className="text-sm">
+														Automatically stop timer when starting a new one
+													</span>
+												</div>
 												<Button
 													type="button"
 													variant="destructive"
