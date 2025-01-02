@@ -60,6 +60,17 @@ ENV INTERNAL_PORT="8080"
 ENV PORT="8081"
 ENV NODE_ENV="production"
 
+# Set environment variables for puppeteer & download chromium
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
+RUN apt-get update && apt-get install -y \
+    udev \
+    fonts-freefont-ttf \
+    chromium-common \
+    chromium-sandbox \
+    chromium \
+    libgif7
+
 # add shortcut for connecting to database CLI
 RUN echo "#!/bin/sh\nset -x\nsqlite3 \$DATABASE_URL" > /usr/local/bin/database-cli && chmod +x /usr/local/bin/database-cli
 

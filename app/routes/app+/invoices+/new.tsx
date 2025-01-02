@@ -22,6 +22,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 		where: { id: orgId },
 		include: {
 			clients: {
+				where: { deletedAt: null },
 				include: {
 					_count: { select: { invoices: true } },
 					timeEntries: {
@@ -192,15 +193,13 @@ export default function NewInvoice() {
 
 							return (
 								<tr key={entry.id} className="border-b border-gray-200">
-									<td className="py-2">
+									<td className="p-2">
 										{new Date(entry.startTime).toLocaleDateString()}
 									</td>
-									<td className="py-2">{entry.description}</td>
-									<td className="py-2 text-right">{hours.toFixed(2)}</td>
-									<td className="py-2 text-right">
-										${Number(rate).toFixed(2)}
-									</td>
-									<td className="py-2 text-right">${amount.toFixed(2)}</td>
+									<td className="p-2">{entry.description}</td>
+									<td className="p-2 text-right">{hours.toFixed(2)}</td>
+									<td className="p-2 text-right">${Number(rate).toFixed(2)}</td>
+									<td className="p-2 text-right">${amount.toFixed(2)}</td>
 								</tr>
 							)
 						})}

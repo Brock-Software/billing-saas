@@ -9,6 +9,7 @@ import {
 import { type PrismaClient } from '@prisma/client'
 import Mustache from 'mustache'
 import puppeteer from 'puppeteer-core'
+import { formatPhoneNumber } from '#app/utils/formatPhone'
 
 export interface upsertInvoicePdfPayload {
 	invoiceId: string
@@ -114,6 +115,15 @@ export async function upsertInvoicePdf(
 		{
 			invoice: {
 				...invoice,
+				client: {
+					...invoice.client,
+					organization: {
+						...invoice.client.organization,
+						phone: invoice.client.organization.phone
+							? formatPhoneNumber(invoice.client.organization.phone)
+							: '',
+					},
+				},
 				timeEntries: timeEntries.map(entry => ({
 					...entry,
 					hours: entry.hours.toFixed(2),
