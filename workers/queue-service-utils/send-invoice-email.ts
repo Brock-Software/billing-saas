@@ -1,4 +1,6 @@
+/* eslint-disable no-console */
 import { GetObjectCommand, S3Client } from '@aws-sdk/client-s3'
+import { type PrismaClient } from '@prisma/client'
 import { Resend } from 'resend'
 
 export interface SendInvoiceEmailPayload {
@@ -29,7 +31,12 @@ const getS3File = async (key: string) => {
 	}
 }
 
-export async function sendInvoiceEmail(data: SendInvoiceEmailPayload) {
+export async function sendInvoiceEmail(
+	_prisma: PrismaClient,
+	data: SendInvoiceEmailPayload,
+) {
+	console.time(`[send-invoice-email] Sent invoice email for ${data.invoiceId}`)
+
 	const invoicePdf = await getS3File(`invoices/${data.invoiceId}.pdf`)
 
 	await resend.emails.send({
@@ -41,4 +48,8 @@ export async function sendInvoiceEmail(data: SendInvoiceEmailPayload) {
 		html: data.body,
 		attachments: [invoicePdf],
 	})
+
+	console.timeEnd(
+		`[send-invoice-email] Sent invoice email for ${data.invoiceId}`,
+	)
 }

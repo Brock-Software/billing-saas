@@ -17,6 +17,7 @@ swap_size_mb = 512
 [processes]
   app = ''
   cron = 'supercronic crontab'
+  queue-service = 'bun run workers/queue-service.ts'
 
 [[mounts]]
   source = 'data'
@@ -75,13 +76,13 @@ swap_size_mb = 512
     path = '/litefs/health'
 
 [[vm]]
-  memory = '512mb'
-  cpu_kind = 'shared'
-  cpus = 1
-  processes = ['app']
-
-[[vm]]
   cpu_kind = 'shared'
   cpus = 1
   memory_mb = 256
   processes = ['cron']
+
+[[vm]]
+  cpu_kind = 'shared'
+  cpus = 1
+  memory_mb = 512
+  processes = ['app','queue-service']

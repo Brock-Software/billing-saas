@@ -42,6 +42,17 @@ RUN rm -rf node_modules && \
 # Final stage for app image
 FROM base
 
+# Set environment variables for puppeteer & download chromium
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
+RUN apt-get update && apt-get install -y \
+    udev \
+    fonts-freefont-ttf \
+    chromium-common \
+    chromium-sandbox \
+    chromium \
+    libgif7
+
 # Install, configure litefs
 COPY --from=flyio/litefs:0.4.0 /usr/local/bin/litefs /usr/local/bin/litefs
 COPY --link other/litefs.yml /etc/litefs.yml
@@ -55,7 +66,7 @@ RUN apt-get update -qq && \
 COPY --from=build /app /app
 
 # Setup sqlite3 on a separate volume
-RUN mkdir -p /data /litefs 
+RUN mkdir -p /data /litefs
 VOLUME /data
 
 # add shortcut for connecting to database CLI

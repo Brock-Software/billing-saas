@@ -85,10 +85,9 @@
       <p class="font-bold">Bill To:</p>
       <p>
         {{invoice.client.name}}<br />
-        {{invoice.client.organization.name}}<br />
-        {{invoice.client.organization.line1}}<br />
-        {{#invoice.client.organization.line2}}{{invoice.client.organization.line2}}<br />{{/invoice.client.organization.line2}}
-        {{invoice.client.organization.city}}, {{invoice.client.organization.state}} {{invoice.client.organization.zip}}
+        {{invoice.client.line1}}<br />
+        {{#invoice.client.line2}}{{invoice.client.line2}}<br />{{/invoice.client.line2}}
+        {{invoice.client.city}}, {{invoice.client.state}} {{invoice.client.zip}}
       </p>
     </div>
 
@@ -116,12 +115,12 @@
           <td colspan="4" class="text-right font-bold">Subtotal:</td>
           <td class="text-right">${{invoice.subtotal}}</td>
         </tr>
-        {{#invoice.tax}}
+        {{#invoice.taxAmount}}
         <tr>
           <td colspan="4" class="text-right">Tax ({{invoice.tax}}%):</td>
           <td class="text-right">${{invoice.taxAmount}}</td>
         </tr>
-        {{/invoice.tax}}
+        {{/invoice.taxAmount}}
         {{#invoice.discount}}
         <tr>
           <td colspan="4" class="text-right">Discount:</td>

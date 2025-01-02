@@ -1,67 +1,83 @@
 app = "billing-saas-preview"
-primary_region = "atl"
-kill_signal = "SIGINT"
-kill_timeout = "5s"
+primary_region = 'atl'
+kill_signal = 'SIGINT'
+kill_timeout = '5s'
+swap_size_mb = 512
 
 [experimental]
   auto_rollback = true
 
 [build]
 
+[processes]
+  app = ''
+  cron = 'supercronic crontab'
+  queue-service = 'bun run workers/queue-service.ts'
+
 [[mounts]]
-  source = "data"
-  destination = "/data"
-  initial_size= "1GB"
-  auto_extend_size_threshold = 0
+  source = 'data'
+  destination = '/data'
+  initial_size = '3GB'
+  auto_extend_size_threshold = 80
+  auto_extend_size_increment = '1GB'
+  auto_extend_size_limit = '10GB'
 
 [http_service]
-  internal_port = 8081
+  internal_port = 3000
   force_https = true
-  auto_stop_machines = true
+  auto_stop_machines = 'stop'
   auto_start_machines = true
   min_machines_running = 0
-  processes = ["app"]
+  processes = ['app']
 
 [[services]]
-  protocol = "tcp"
+  protocol = 'tcp'
   internal_port = 8080
-  processes = ["app"]
+  processes = ['app']
 
   [[services.ports]]
     port = 80
-    handlers = ["http"]
+    handlers = ['http']
     force_https = true
 
   [[services.ports]]
     port = 443
-    handlers = ["tls", "http"]
+    handlers = ['tls', 'http']
+
   [services.concurrency]
-    type = "requests"
+    type = 'requests'
     hard_limit = 100
     soft_limit = 80
 
   [[services.tcp_checks]]
-    interval = "15s"
-    timeout = "2s"
-    grace_period = "1s"
+    interval = '15s'
+    timeout = '2s'
+    grace_period = '1s'
 
   [[services.http_checks]]
-    interval = "10s"
-    timeout = "2s"
-    grace_period = "5s"
-    method = "get"
-    path = "/api/healthcheck"
-    protocol = "http"
+    interval = '50s'
+    timeout = '2s'
+    grace_period = '5s'
+    method = 'get'
+    path = '/api/healthcheck'
+    protocol = 'http'
     tls_skip_verify = false
 
   [[services.http_checks]]
-    interval = "30s"
-    timeout = "5s"
-    grace_period = "10s"
-    method = "GET"
-    path = "/litefs/health"
+    interval = '30s'
+    timeout = '5s'
+    grace_period = '10s'
+    method = 'GET'
+    path = '/litefs/health'
 
 [[vm]]
-  cpu_kind = "shared"
+  cpu_kind = 'shared'
+  cpus = 1
+  memory_mb = 256
+  processes = ['cron']
+
+[[vm]]
+  cpu_kind = 'shared'
   cpus = 1
   memory_mb = 512
+  processes = ['app','queue-service']

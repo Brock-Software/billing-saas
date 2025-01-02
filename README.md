@@ -1,20 +1,48 @@
-# Variables to replace
-apple_domain = `<your.apple.id>`
-domain = `billing-saas`
-app_name = `billing-saas`
-app_display_name =`billing-saas`
-organization = `brock-software`
-primary_region = `atl`
-primary_fly_vm_id = `<your_app_machine_id>`
+# Overview
+A react, react-router, vite (w Remix plugin), using pre-v7 (remix & react-router are not merged pre-v7). See the `package.json` for standard commands.
 
-### Getting started
+| Command | Description |
+|---------|-------------|
+| Package manager | `bun` |
+| Stack | React, Remix (react-router as a framework), Vite |
+| Apps | 1) Web app (core), 2) backup db service, 3) queue-service (for handling jobs) |
+
+# Getting started
 
 1. Create .env file & copy over all values from .env.example
 2. Install dependencies w/ `bun install`
 3. Migrate the database `bunx prisma migrate dev`
-4. Begin development
+4. Begin development with `bun dev`
+5. Open another terminal, and start the **queue-service** to handle jobs with `bun run workers/queue-service.ts`
 
-### Deploying for the first time
+# Troubleshooting
+
+## Code Rollback
+
+```bash
+fly deploy -i `fly releases -j | jq ".[1].ImageRef" -r`
+```
+
+Run `fly releases --image` to see the latest images released if you need to
+cherry-pick. Only code changes will create a new image (setting or removing
+secrets won't create a new image, etc.)
+
+## Database security
+
+### Backups
+
+All backups are automated (if the aws variables `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` are in github action secrets).
+They will happen daily.
+
+### Restore
+
+To restore the latest database in case of emergency, run the following commands:
+
+```
+fly ssh console -C "./scripts/restore-latest-backup.sh"
+```
+
+## Deploying for the first time
 
 - Launch your app on Fly with `fly launch` > Select 'y' to configure settings
   - In the browser popup, select the correct organization
@@ -37,29 +65,11 @@ primary_fly_vm_id = `<your_app_machine_id>`
 - Setup [Resend](https://resend.com) to send emails (use the email in your .env/secret on fly)
 - Update the `scripts/backup` & `scripts/restore-latest-backup` script to use (any) one of your machine ids (line 5), app name, and Tigris bucket name (should be the same as app name)
 
-# Database Troubleshooting
-
-## Backups
-
-All backups are automated (if the aws variables `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` are in github action secrets).
-They will happen daily.
-
-## Restore
-
-To restore the latest database in case of emergency, run the following commands:
-
-```
-fly ssh console -C "./scripts/restore-latest-backup.sh"
-```
-
-# Code Troubleshooting
-
-## Code Rollback
-
-```bash
-fly deploy -i `fly releases -j | jq ".[1].ImageRef" -r`
-```
-
-Run `fly releases --image` to see the latest images released if you need to
-cherry-pick. Only code changes will create a new image (setting or removing
-secrets won't create a new image, etc.)
+### Variables to replace
+apple_domain = `<your.apple.id>`
+domain = `billing-saas`
+app_name = `billing-saas`
+app_display_name =`billing-saas`
+organization = `brock-software`
+primary_region = `atl`
+primary_fly_vm_id = `<your_app_machine_id>`

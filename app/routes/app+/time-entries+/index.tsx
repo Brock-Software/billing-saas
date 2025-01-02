@@ -5,10 +5,11 @@ import {
 } from '@remix-run/node'
 import { useLoaderData } from '@remix-run/react'
 import { withZod } from '@remix-validated-form/with-zod'
+import omit from 'lodash/omit'
 import { validationError } from 'remix-validated-form'
 import { z } from 'zod'
 
-import { TimeEntriesTable } from '#app/components/models/time-entries-table.tsx'
+import { TimeEntriesTable } from '#app/components/time-entries-table.tsx'
 import { TimeEntry } from '#app/domain/TimeEntry.ts'
 import { getOrgId } from '#app/routes/api+/preferences+/organization/cookie.server.ts'
 import { prisma } from '#app/utils/db.server.ts'
@@ -16,14 +17,6 @@ import { prisma } from '#app/utils/db.server.ts'
 function parseDurationToMs(duration: string) {
 	const [hours, minutes, seconds] = duration.split(':').map(Number)
 	return (hours * 3600 + minutes * 60 + seconds) * 1000
-}
-
-function formatUTCForDatetimeLocal(utcIsoString: string) {
-	const date = new Date(utcIsoString)
-	const tzOffset = date.getTimezoneOffset()
-	const localDate = new Date(date.getTime() - tzOffset * 60000)
-	const formattedDate = localDate.toISOString().slice(0, 16)
-	return formattedDate
 }
 
 export async function loader({ request }: LoaderFunctionArgs) {
@@ -59,82 +52,37 @@ const validator = withZod(
 export async function action({ request }: ActionFunctionArgs) {
 	const formData = await request.formData()
 	const intent = formData.get('intent')
+	const orgId = getOrgId(request)!
+	const entryId = formData.get('entryId') as string
 	formData.delete('intent')
 
 	switch (intent) {
-		case 'start': {
-			await TimeEntry.startNewEntryFromExisting({
-				entryId: formData.get('entryId') as string,
-				orgId: getOrgId(request)!,
-			})
-			return json(
-				{ success: true },
-				{ headers: { 'X-Remix-Revalidate': '/app+/_index/route' } },
-			)
+		case 'duplicate-and-start': {
+			await TimeEntry.duplicateAndStart(entryId, orgId)
+			return json({ success: true })
 		}
 		case 'stop': {
-			const entryId = formData.get('entryId')
-			await prisma.timeEntry.update({
-				where: { id: entryId as string },
-				data: { endTime: new Date().toISOString() },
-			})
+			await TimeEntry.stop(entryId)
 			return json({ success: true })
 		}
 		case 'delete': {
-			const entryId = formData.get('entryId')
-			await prisma.timeEntry.delete({ where: { id: entryId as string } })
+			await TimeEntry.delete(entryId)
 			return json({ success: true })
 		}
 		case 'duplicate': {
-			const entryId = formData.get('entryId')
-			const entry = await prisma.timeEntry.findUniqueOrThrow({
-				where: { id: entryId as string },
-			})
-
-			const { id, createdAt, updatedAt, ...entryData } = entry
-			await prisma.timeEntry.create({ data: entryData })
+			await TimeEntry.duplicate(entryId)
 			return json({ success: true })
 		}
 		case 'update-duration': {
-			const entryId = formData.get('entryId')
-			const duration = formData.get('duration')
-			const entry = await prisma.timeEntry.findUniqueOrThrow({
-				where: { id: entryId as string },
-			})
-
-			const endTime = new Date(
-				new Date(entry.startTime).getTime() +
-					parseDurationToMs(duration as string),
-			).toISOString()
-			await prisma.timeEntry.update({
-				where: { id: entryId as string },
-				data: { endTime },
-			})
+			const duration = formData.get('duration') as string
+			await TimeEntry.updateDuration(entryId, duration)
 			return json({ success: true })
 		}
 		case 'update': {
 			const { data, error } = await validator.validate(formData)
 			if (error) return validationError(error)
-			const { entryId, hourlyRate, clientId, ...rest } = data
-
-			const updatedEntry = await prisma.timeEntry.update({
-				where: { id: entryId },
-				data: {
-					hourlyRate:
-						hourlyRate === undefined
-							? undefined
-							: hourlyRate === ''
-								? null
-								: Number(hourlyRate),
-					...(clientId === undefined
-						? {}
-						: clientId === ''
-							? { client: { disconnect: true } }
-							: { client: { connect: { id: clientId } } }),
-					...rest,
-				},
-			})
-			return json({ entry: updatedEntry })
+			await TimeEntry.update(entryId, omit(data, ['entryId']))
+			return json({ success: true })
 		}
 		default: {
 			return json({ error: 'Invalid intent' }, { status: 405 })

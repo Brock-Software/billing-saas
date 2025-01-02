@@ -4,22 +4,14 @@ import {
 	json,
 	type LoaderFunctionArgs,
 } from '@remix-run/node'
-import {
-	Link,
-	useLoaderData,
-	useFetcher,
-	useSearchParams,
-	useSubmit,
-} from '@remix-run/react'
+import { Link, useLoaderData, useFetcher } from '@remix-run/react'
 import { Clock } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
-import { TimeEntriesTable } from '#app/components/models/time-entries-table.tsx'
+import { TimeEntriesTable } from '#app/components/time-entries-table.tsx'
 import { Button } from '#app/components/ui/button'
 import { Input } from '#app/components/ui/input'
 import { getOrgId } from '#app/routes/api+/preferences+/organization/cookie.server.ts'
 import { prisma } from '#app/utils/db.server'
-import { ClientFilter } from './reports/client-filter'
-import { CalendarDateRangePicker } from './reports/date-range-filter'
 import { Timer } from './timer'
 
 export async function loader({ request }: LoaderFunctionArgs) {
@@ -199,30 +191,14 @@ export async function action({ request }: ActionFunctionArgs) {
 	return json({ message: 'model actions not found' }, { status: 405 })
 }
 
-export default function TimePage() {
+export default function Route() {
 	const { clients, activeTimeEntry, entries, entriesCount, reports } =
 		useLoaderData<typeof loader>()
 	const startTimer = useFetcher<{ entry: TimeEntry | null }>()
 	const [entry, setEntry] = useState<typeof activeTimeEntry>(activeTimeEntry)
-	const [searchParams] = useSearchParams()
-	const submit = useSubmit()
 
 	const descriptionRef = useRef<HTMLInputElement>(null)
 	const clientIdRef = useRef<HTMLSelectElement>(null)
-
-	const formatDuration = (minutes: number) => {
-		const roundedMinutes = Math.ceil(minutes)
-		const hours = Math.floor(roundedMinutes / 60)
-		const remainingMinutes = roundedMinutes % 60
-		return `${hours}h${remainingMinutes ? ` ${remainingMinutes}m` : ''}`
-	}
-
-	const formatCurrency = (amount: number) => {
-		return new Intl.NumberFormat('en-US', {
-			style: 'currency',
-			currency: 'USD',
-		}).format(amount)
-	}
 
 	const handleStart = () => {
 		const f = new FormData()
@@ -355,99 +331,11 @@ export default function TimePage() {
 				</div>
 			</div>
 
-			<div className="flex flex-col gap-4 rounded-lg border bg-gradient-to-br from-white to-gray-50 p-6">
-				<div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-					<h2 className="text-xl font-semibold tracking-tight">
-						Reports & Analytics
-					</h2>
-					<div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-						<ClientFilter
-							options={clients.map(client => ({
-								label: client.name,
-								value: client.id,
-							}))}
-							onChange={selectedClients => {
-								const params = new URLSearchParams(searchParams)
-								if (selectedClients.length) {
-									params.set('clients', selectedClients.join(','))
-								} else {
-									params.delete('clients')
-								}
-								submit(params)
-							}}
-						/>
-						<CalendarDateRangePicker
-							className="w-auto"
-							onChange={range => {
-								const params = new URLSearchParams(searchParams)
-								if (range?.from) {
-									params.set('startDate', range.from.toISOString())
-								} else {
-									params.delete('startDate')
-								}
-								if (range?.to) {
-									params.set('endDate', range.to.toISOString())
-								} else {
-									params.delete('endDate')
-								}
-								submit(params)
-							}}
-						/>
-					</div>
-				</div>
-
-				<div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-					<div className="group relative overflow-hidden rounded-lg border bg-white p-6 shadow-sm transition-all hover:shadow-md">
-						<div className="flex flex-col gap-2">
-							<div className="text-sm font-medium text-muted-foreground">
-								Billable Time
-							</div>
-							<div className="text-3xl font-bold text-primary">
-								{formatCurrency(reports.unbilledAmount)}
-							</div>
-							<div className="text-sm text-muted-foreground">
-								{formatDuration(reports.unbilledTime)}
-							</div>
-						</div>
-						<div className="absolute inset-x-0 bottom-0 h-1 bg-blue-500/10 group-hover:bg-blue-500/20" />
-					</div>
-
-					<div className="group relative overflow-hidden rounded-lg border bg-white p-6 shadow-sm transition-all hover:shadow-md">
-						<div className="flex flex-col gap-2">
-							<div className="text-sm font-medium text-muted-foreground">
-								Billed Time
-							</div>
-							<div className="text-3xl font-bold text-orange-600">
-								{formatCurrency(reports.billedAmount)}
-							</div>
-							<div className="text-sm text-muted-foreground">
-								{formatDuration(reports.billedTime)}
-							</div>
-						</div>
-						<div className="absolute inset-x-0 bottom-0 h-1 bg-orange-500/10 group-hover:bg-orange-500/20" />
-					</div>
-
-					<div className="group relative overflow-hidden rounded-lg border bg-white p-6 shadow-sm transition-all hover:shadow-md">
-						<div className="flex flex-col gap-2">
-							<div className="text-sm font-medium text-muted-foreground">
-								Paid Time
-							</div>
-							<div className="text-3xl font-bold text-green-600">
-								{formatCurrency(reports.paidAmount)}
-							</div>
-							<div className="text-sm text-muted-foreground">
-								{formatDuration(reports.paidTime)}
-							</div>
-						</div>
-						<div className="absolute inset-x-0 bottom-0 h-1 bg-green-500/10 group-hover:bg-green-500/20" />
-					</div>
-				</div>
-			</div>
-
 			<TimeEntriesTable
 				entries={entries as any}
 				entriesCount={entriesCount}
 				clients={clients as any}
+				reports={reports}
 			/>
 		</div>
 	)

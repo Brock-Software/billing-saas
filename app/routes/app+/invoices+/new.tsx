@@ -70,7 +70,7 @@ export async function action({ request }: ActionFunctionArgs) {
 
 		await tx.job.create({
 			data: {
-				type: 'create-invoice-pdf',
+				type: 'upsert-invoice-pdf',
 				data: JSON.stringify({ invoiceId: invoice.id }),
 			},
 		})
