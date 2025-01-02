@@ -157,12 +157,6 @@ export default function NewInvoice() {
 				<p className="m-0">
 					{client?.name}
 					<br />
-					{client?.company && (
-						<>
-							{client.company}
-							<br />
-						</>
-					)}
 					{client?.line1}
 					<br />
 					{client?.line2 && (
@@ -299,7 +293,7 @@ export default function NewInvoice() {
 								<label className="mb-2 block text-sm font-medium">
 									Payment Terms
 								</label>
-								<div className="flex flex-wrap gap-2">
+								<div className="flex flex-wrap gap-2 rounded-md border bg-slate-100 p-0.5">
 									<input type="hidden" name="dueDate" value={dueDate} />
 									{[
 										{ days: 0, label: 'Due Now' },
@@ -314,6 +308,7 @@ export default function NewInvoice() {
 											size="lg"
 											onClick={() => setNetDays(days)}
 											variant={netDays === days ? 'outline' : 'ghost'}
+											className="hover:bg-white"
 										>
 											{label}
 										</Button>

@@ -38,6 +38,7 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.19.0",
     "@aws-sdk/client-s3": "^3.703.0",
+    "@aws-sdk/s3-request-presigner": "^3.717.0",
     "@capacitor-community/contacts": "^5.0.5",
     "@capacitor/android": "^6.0.0",
     "@capacitor/app": "^6.0.0",

@@ -3,9 +3,11 @@ import {
 	type LoaderFunctionArgs,
 	type ActionFunctionArgs,
 } from '@remix-run/node'
-import { useLoaderData, Form } from '@remix-run/react'
+import { useLoaderData, Form, useFetcher } from '@remix-run/react'
+import { useEffect, useState } from 'react'
 import { Button } from '#app/components/ui/button'
 import { prisma } from '#app/utils/db.server'
+import { getSignedUrl } from '#app/utils/s3.server'
 import { redirectWithToast } from '#app/utils/toast.server'
 
 export async function loader({ params }: LoaderFunctionArgs) {
@@ -47,6 +49,16 @@ export async function action({ request, params }: ActionFunctionArgs) {
 				description: 'Invoice will be sent shortly',
 			})
 		}
+		case 'mark-sent': {
+			await prisma.invoice.update({
+				where: { id: params.id },
+				data: { sentAt: new Date() },
+			})
+			return redirectWithToast(`/app/invoices/${params.id}`, {
+				title: 'Invoice marked as sent',
+				description: 'Invoice has been marked as sent',
+			})
+		}
 		case 'mark-paid': {
 			await prisma.invoice.update({
 				where: { id: params.id },
@@ -57,11 +69,47 @@ export async function action({ request, params }: ActionFunctionArgs) {
 				description: 'Invoice has been marked as paid',
 			})
 		}
+		case 'get-download-url': {
+			const signedUrl = await getSignedUrl(`invoices/${params.id}.pdf`, 3600)
+			return json({ signedUrl })
+		}
 	}
 }
 
 export default function Id() {
 	const { invoice, job } = useLoaderData<typeof loader>()
+	const fetcher = useFetcher<{ signedUrl: string }>()
+	const [showCopied, setShowCopied] = useState(false)
+
+	const downloadInvoice = async () => {
+		const data = new FormData()
+		data.append('intent', 'get-download-url')
+		fetcher.submit(data, { method: 'POST' })
+	}
+
+	useEffect(() => {
+		if (fetcher.data?.signedUrl) {
+			window.open(fetcher.data.signedUrl, '_blank')
+		}
+	}, [fetcher.data?.signedUrl])
+
+	const handleCopy = () => {
+		navigator.clipboard.writeText(`Hi,
+
+I hope this email finds you well. Please find attached the invoice for recent services provided.
+
+Invoice Details:
+- Invoice Number: ${invoice.number}
+- Due Date: ${new Date(invoice.dueDate).toLocaleDateString()}
+
+Please let me know if you have any questions or concerns.
+
+Thank you for your business!
+
+Best regards,`)
+		setShowCopied(true)
+		setTimeout(() => setShowCopied(false), 3000)
+	}
 
 	if (invoice.paidAt) {
 		return (
@@ -74,41 +122,97 @@ export default function Id() {
 		)
 	}
 
-	if (!invoice.sentAt && !job) {
+	if (invoice.sentAt) {
 		return (
 			<div className="py-12 text-center">
-				<h1 className="mb-4 text-2xl font-semibold">Ready to Send Invoice</h1>
+				<h1 className="mb-4 text-2xl font-semibold">Invoice Sent</h1>
+				<p className="mb-6 text-gray-600">
+					Invoice was sent to {invoice.client.email}
+				</p>
 				<Form method="post">
-					<Button name="intent" value="send">
-						Send Invoice
+					<Button variant="outline" name="intent" value="mark-paid">
+						Record Payment
 					</Button>
 				</Form>
 			</div>
 		)
 	}
 
-	if (job?.status === 'pending' || job?.status === 'processing') {
-		return (
-			<div className="py-12 text-center">
-				<h1 className="mb-4 text-2xl font-semibold">Sending Invoice...</h1>
-				<p className="text-gray-600">
-					The invoice is being processed and will be sent shortly.
-				</p>
-			</div>
-		)
+	if (job) {
+		if (job.status === 'pending' || job.status === 'processing') {
+			return (
+				<div className="py-12 text-center">
+					<h1 className="mb-4 text-2xl font-semibold">Sending Invoice...</h1>
+					<p className="text-gray-600">
+						The invoice is being processed and will be sent shortly.
+					</p>
+				</div>
+			)
+		} else if (job.status === 'completed') {
+			return (
+				<div className="py-12 text-center">
+					<h1 className="mb-4 text-2xl font-semibold">Invoice Sent</h1>
+				</div>
+			)
+		} else {
+			return (
+				<div className="py-12 text-center">
+					<h1 className="mb-4 text-2xl font-semibold">
+						Invoice failed to send.
+					</h1>
+				</div>
+			)
+		}
 	}
 
 	return (
 		<div className="py-12 text-center">
-			<h1 className="mb-4 text-2xl font-semibold">Invoice Sent</h1>
+			<h1 className="mb-4 text-2xl font-semibold">Ready to Send</h1>
 			<p className="mb-6 text-gray-600">
-				Invoice was sent to {invoice.client.email}
+				Invoice will be sent to {invoice.client.email}
 			</p>
-			<Form method="post">
-				<Button name="intent" value="mark-paid">
-					Record Payment
-				</Button>
-			</Form>
+			<div className="space-y-8">
+				<div className="flex justify-center gap-4">
+					<Button name="intent" onClick={downloadInvoice}>
+						Download Invoice
+					</Button>
+					<Form method="post">
+						<Button name="intent" value="mark-sent" variant="outline">
+							Mark as Sent
+						</Button>
+					</Form>
+				</div>
+
+				<div className="mx-auto max-w-2xl rounded-lg border border-gray-200 bg-gray-50 p-6 text-left">
+					<h2 className="mb-4 font-semibold">Email Template</h2>
+					<div className="rounded bg-white p-4">
+						<pre className="whitespace-pre-wrap text-sm text-gray-700">
+							{`Hi,
+
+I hope this email finds you well. Please find attached the invoice for recent services provided.
+
+Invoice Details:
+- Invoice Number: ${invoice.number}
+- Due Date: ${new Date(invoice.dueDate).toLocaleDateString()}
+
+Please let me know if you have any questions or concerns.
+
+Thank you for your business!
+
+Best regards,`}
+						</pre>
+					</div>
+					<div className="relative">
+						<Button
+							variant="outline"
+							className="mt-2 w-full"
+							onClick={handleCopy}
+						>
+							{showCopied ? 'Copied!' : 'Copy to Clipboard'}
+						</Button>
+					</div>
+				</div>
+			</div>
 		</div>
 	)
 }

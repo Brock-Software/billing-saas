@@ -255,6 +255,9 @@ export default function Route() {
 					<Button variant="link" asChild>
 						<Link to="clients">Clients</Link>
 					</Button>
+					<Button variant="link" asChild>
+						<Link to="/app/invoices">Invoices</Link>
+					</Button>
 				</div>
 			</div>
 
