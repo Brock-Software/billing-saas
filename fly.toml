@@ -17,7 +17,7 @@ swap_size_mb = 512
 [processes]
   app = ''
   cron = 'supercronic crontab'
-  queue-service = 'litefs mount -- bun run workers/queue-service.ts'
+  queue-service = 'bun run workers/queue-service.ts'
 
 [[mounts]]
   source = 'data'
