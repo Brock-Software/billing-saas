@@ -28,16 +28,6 @@ export async function loader({ request }: LoaderFunctionArgs) {
 		...(endDate && { lte: new Date(endDate) }),
 	}
 
-	const clientFilter = selectedClients.length
-		? { clientId: { in: selectedClients } }
-		: {}
-
-	const baseFilter = {
-		...clientFilter,
-		startTime: Object.keys(dateFilter).length ? dateFilter : undefined,
-		endTime: { not: null },
-	}
-
 	const [clients, activeTimeEntry, timeEntries, timeEntriesCount] =
 		await Promise.all([
 			prisma.client.findMany({
@@ -72,6 +62,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 						deletedAt: null,
 						...(selectedClients.length ? { id: { in: selectedClients } } : {}),
 					},
+					...(Object.keys(dateFilter).length ? { startTime: dateFilter } : {}),
 				},
 			}),
 			prisma.timeEntry.count({
@@ -79,8 +70,9 @@ export async function loader({ request }: LoaderFunctionArgs) {
 					client: {
 						organization: { id: orgId! },
 						deletedAt: null,
-						id: { in: selectedClients },
+						...(selectedClients.length ? { id: { in: selectedClients } } : {}),
 					},
+					...(Object.keys(dateFilter).length ? { startTime: dateFilter } : {}),
 				},
 			}),
 		])
