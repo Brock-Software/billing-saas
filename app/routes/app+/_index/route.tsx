@@ -52,8 +52,6 @@ export async function loader({ request }: LoaderFunctionArgs) {
 				},
 			}),
 			prisma.timeEntry.findMany({
-				skip,
-				take,
 				orderBy: { startTime: 'desc' },
 				include: { client: true, invoice: true },
 				where: {
@@ -118,7 +116,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 	return {
 		clients,
 		activeTimeEntry,
-		timeEntries,
+		timeEntries: timeEntries.slice(skip, skip + take),
 		timeEntriesCount,
 		reports,
 	}
