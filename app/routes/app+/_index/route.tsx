@@ -38,7 +38,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 		endTime: { not: null },
 	}
 
-	const [clients, activeTimeEntry, entries, entriesCount, timeEntries] =
+	const [clients, activeTimeEntry, timeEntries, timeEntriesCount] =
 		await Promise.all([
 			prisma.client.findMany({
 				select: {
@@ -55,17 +55,33 @@ export async function loader({ request }: LoaderFunctionArgs) {
 				},
 				where: { organization: { id: orgId! }, deletedAt: null },
 			}),
-			prisma.timeEntry.findFirst({ where: { endTime: null } }),
+			prisma.timeEntry.findFirst({
+				where: {
+					endTime: null,
+					client: { organization: { id: orgId! }, deletedAt: null },
+				},
+			}),
 			prisma.timeEntry.findMany({
 				skip,
 				take,
 				orderBy: { startTime: 'desc' },
 				include: { client: true, invoice: true },
+				where: {
+					client: {
+						organization: { id: orgId! },
+						deletedAt: null,
+						...(selectedClients.length ? { id: { in: selectedClients } } : {}),
+					},
+				},
 			}),
-			prisma.timeEntry.count(),
-			prisma.timeEntry.findMany({
-				where: baseFilter,
-				include: { invoice: true, client: true },
+			prisma.timeEntry.count({
+				where: {
+					client: {
+						organization: { id: orgId! },
+						deletedAt: null,
+						id: { in: selectedClients },
+					},
+				},
 			}),
 		])
 
@@ -110,8 +126,8 @@ export async function loader({ request }: LoaderFunctionArgs) {
 	return {
 		clients,
 		activeTimeEntry,
-		entries,
-		entriesCount,
+		timeEntries,
+		timeEntriesCount,
 		reports,
 	}
 }
@@ -192,7 +208,7 @@ export async function action({ request }: ActionFunctionArgs) {
 }
 
 export default function Route() {
-	const { clients, activeTimeEntry, entries, entriesCount, reports } =
+	const { clients, activeTimeEntry, timeEntries, timeEntriesCount, reports } =
 		useLoaderData<typeof loader>()
 	const startTimer = useFetcher<{ entry: TimeEntry | null }>()
 	const [entry, setEntry] = useState<typeof activeTimeEntry>(activeTimeEntry)
@@ -335,8 +351,8 @@ export default function Route() {
 			</div>
 
 			<TimeEntriesTable
-				entries={entries as any}
-				entriesCount={entriesCount}
+				entries={timeEntries as any}
+				entriesCount={timeEntriesCount}
 				clients={clients as any}
 				reports={reports}
 			/>
