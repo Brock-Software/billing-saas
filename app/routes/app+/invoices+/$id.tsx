@@ -21,15 +21,15 @@ export async function loader({ params }: LoaderFunctionArgs) {
 
 	if (!invoice) throw new Response('Not Found', { status: 404 })
 
-	const job = await prisma.job.findFirst({
+	const generateInvoiceJob = await prisma.job.findFirst({
 		where: {
-			type: 'send-invoice',
+			type: 'upsert-invoice-pdf',
 			data: { contains: invoice.id },
 		},
 		orderBy: { createdAt: 'desc' },
 	})
 
-	return json({ invoice, job })
+	return json({ invoice, generateInvoiceJob })
 }
 
 export async function action({ request, params }: ActionFunctionArgs) {
@@ -37,7 +37,19 @@ export async function action({ request, params }: ActionFunctionArgs) {
 	const intent = formData.get('intent')
 
 	switch (intent) {
-		case 'send': {
+		case 're-generate-invoice': {
+			await prisma.job.create({
+				data: {
+					type: 'upsert-invoice-pdf',
+					data: JSON.stringify({ invoiceId: params.id, regenerated: true }),
+				},
+			})
+			return redirectWithToast(`/app/invoices/${params.id}`, {
+				title: 'Invoice queued',
+				description: 'Invoice will be processed shortly',
+			})
+		}
+		case 'send-invoice-email': {
 			await prisma.job.create({
 				data: {
 					type: 'send-invoice-email',
@@ -77,7 +89,7 @@ export async function action({ request, params }: ActionFunctionArgs) {
 }
 
 export default function Id() {
-	const { invoice, job } = useLoaderData<typeof loader>()
+	const { invoice, generateInvoiceJob } = useLoaderData<typeof loader>()
 	const fetcher = useFetcher<{ signedUrl: string }>()
 	const [showCopied, setShowCopied] = useState(false)
 
@@ -138,28 +150,29 @@ Best regards,`)
 		)
 	}
 
-	if (job) {
-		if (job.status === 'pending' || job.status === 'processing') {
+	if (generateInvoiceJob) {
+		if (
+			generateInvoiceJob.status === 'pending' ||
+			generateInvoiceJob.status === 'processing'
+		) {
 			return (
 				<div className="py-12 text-center">
-					<h1 className="mb-4 text-2xl font-semibold">Sending Invoice...</h1>
+					<h1 className="mb-4 text-2xl font-semibold">Generating invoice...</h1>
 					<p className="text-gray-600">
-						The invoice is being processed and will be sent shortly.
+						The invoice is being processed and will be available to send
+						shortly.
 					</p>
 				</div>
 			)
-		} else if (job.status === 'completed') {
-			return (
-				<div className="py-12 text-center">
-					<h1 className="mb-4 text-2xl font-semibold">Invoice Sent</h1>
-				</div>
-			)
-		} else {
+		} else if (generateInvoiceJob.status === 'failed') {
 			return (
 				<div className="py-12 text-center">
 					<h1 className="mb-4 text-2xl font-semibold">
-						Invoice failed to send.
+						Invoice failed to generate.
 					</h1>
+					<p className="text-gray-600">
+						Please try again by clicking the button below.
+					</p>
 				</div>
 			)
 		}
@@ -176,7 +189,10 @@ Best regards,`)
 					<Button name="intent" onClick={downloadInvoice}>
 						Download Invoice
 					</Button>
-					<Form method="post">
+					<Form method="post" className="flex gap-4">
+						<Button name="intent" value="re-generate-invoice" variant="outline">
+							Re-generate Invoice
+						</Button>
 						<Button name="intent" value="mark-sent" variant="outline">
 							Mark as Sent
 						</Button>

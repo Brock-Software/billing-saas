@@ -13,6 +13,7 @@ import { formatPhoneNumber } from '#app/utils/formatPhone'
 
 export interface upsertInvoicePdfPayload {
 	invoiceId: string
+	regenerated?: boolean
 }
 
 const s3Client = new S3Client({
