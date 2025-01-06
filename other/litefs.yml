@@ -20,7 +20,7 @@ proxy:
 # These environment variables will be available in your Fly.io application.
 lease:
   type: 'consul'
-  candidate: ${FLY_REGION == PRIMARY_REGION && FLY_PROCESS_GROUP == 'app'}
+  candidate: ${FLY_ALLOC_ID == 'd8dd76ea21e368'}
   promote: true
   advertise-url: 'http://${HOSTNAME}.vm.${FLY_APP_NAME}.internal:20202'
 
