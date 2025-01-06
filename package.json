@@ -11,6 +11,7 @@
     "build:remix": "remix vite:build --sourcemapClient",
     "build:server": "tsx ./other/build-server.ts",
     "dev": "node ./server/dev-server.js",
+    "dev:queue-service": "bun run workers/queue-service.ts",
     "prisma:studio": "prisma studio",
     "prisma:studio:prod": "./bun-db.sh",
     "format": "prettier --write .",
