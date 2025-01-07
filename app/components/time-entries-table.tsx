@@ -9,6 +9,8 @@ import {
 	startOfYear,
 	endOfYear,
 	subYears,
+	eachDayOfInterval,
+	isSameDay,
 } from 'date-fns'
 import {
 	Copy,
@@ -22,6 +24,15 @@ import {
 } from 'lucide-react'
 import { useState } from 'react'
 import { type DateRange } from 'react-day-picker'
+import {
+	LineChart,
+	Line,
+	XAxis,
+	YAxis,
+	Tooltip as RechartsTooltip,
+	Legend,
+	ResponsiveContainer,
+} from 'recharts'
 import { Pagination } from '#app/components/table/pagination.tsx'
 import { Badge } from '#app/components/ui/badge.tsx'
 import { Button } from '#app/components/ui/button.tsx'
@@ -55,6 +66,12 @@ import {
 	TableHead,
 	TableHeader,
 } from '#app/components/ui/table.tsx'
+import {
+	Tabs,
+	TabsList,
+	TabsTrigger,
+	TabsContent,
+} from '#app/components/ui/tabs.tsx'
 import { cn } from '#app/utils/misc.tsx'
 
 const formatCurrency = (amount: number) => {
@@ -106,6 +123,7 @@ export function TimeEntriesTable({
 	const fetcher = useFetcher()
 	const [searchParams] = useSearchParams()
 	const submit = useSubmit()
+	const [reportTab, setReportTab] = useState('totals')
 
 	return (
 		<div>
@@ -131,6 +149,10 @@ export function TimeEntriesTable({
 						<CalendarDateRangePicker
 							className="w-auto"
 							onChange={range => {
+								if (range && reportTab === 'burndown') {
+									setReportTab('totals')
+								}
+
 								const params = new URLSearchParams(searchParams)
 								if (range?.from) {
 									params.set('startDate', range.from.toISOString())
@@ -148,51 +170,71 @@ export function TimeEntriesTable({
 					</div>
 				</div>
 				{reports ? (
-					<div className="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
-						<div className="group relative overflow-hidden rounded-lg border bg-white p-6 shadow-sm transition-all hover:shadow-md">
-							<div className="flex flex-col gap-2">
-								<div className="text-sm font-medium text-muted-foreground">
-									Billable Time
-								</div>
-								<div className="text-3xl font-bold text-primary">
-									{formatCurrency(reports.unbilledAmount)}
-								</div>
-								<div className="text-sm text-muted-foreground">
-									{formatDuration(reports.unbilledTime)}
-								</div>
-							</div>
-							<div className="absolute inset-x-0 bottom-0 h-1 bg-blue-500/10 group-hover:bg-blue-500/20" />
-						</div>
+					<div className="mb-4">
+						<Tabs onValueChange={setReportTab} value={reportTab}>
+							<TabsList>
+								<TabsTrigger value="totals">Totals</TabsTrigger>
+								<TabsTrigger
+									value="burndown"
+									disabled={Boolean(searchParams.get('startDate'))}
+								>
+									Burndown
+								</TabsTrigger>
+							</TabsList>
+							<TabsContent value="totals">
+								<div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+									<div className="group relative overflow-hidden rounded-lg border bg-white p-6 shadow-sm transition-all hover:shadow-md">
+										<div className="flex flex-col gap-2">
+											<div className="text-sm font-medium text-muted-foreground">
+												Billable Time
+											</div>
+											<div className="text-3xl font-bold text-primary">
+												{formatCurrency(reports.unbilledAmount)}
+											</div>
+											<div className="text-sm text-muted-foreground">
+												{formatDuration(reports.unbilledTime)}
+											</div>
+										</div>
+										<div className="absolute inset-x-0 bottom-0 h-1 bg-blue-500/10 group-hover:bg-blue-500/20" />
+									</div>
 
-						<div className="group relative overflow-hidden rounded-lg border bg-white p-6 shadow-sm transition-all hover:shadow-md">
-							<div className="flex flex-col gap-2">
-								<div className="text-sm font-medium text-muted-foreground">
-									Billed Time
-								</div>
-								<div className="text-3xl font-bold text-orange-600">
-									{formatCurrency(reports.billedAmount)}
-								</div>
-								<div className="text-sm text-muted-foreground">
-									{formatDuration(reports.billedTime)}
-								</div>
-							</div>
-							<div className="absolute inset-x-0 bottom-0 h-1 bg-orange-500/10 group-hover:bg-orange-500/20" />
-						</div>
+									<div className="group relative overflow-hidden rounded-lg border bg-white p-6 shadow-sm transition-all hover:shadow-md">
+										<div className="flex flex-col gap-2">
+											<div className="text-sm font-medium text-muted-foreground">
+												Billed Time
+											</div>
+											<div className="text-3xl font-bold text-orange-600">
+												{formatCurrency(reports.billedAmount)}
+											</div>
+											<div className="text-sm text-muted-foreground">
+												{formatDuration(reports.billedTime)}
+											</div>
+										</div>
+										<div className="absolute inset-x-0 bottom-0 h-1 bg-orange-500/10 group-hover:bg-orange-500/20" />
+									</div>
 
-						<div className="group relative overflow-hidden rounded-lg border bg-white p-6 shadow-sm transition-all hover:shadow-md">
-							<div className="flex flex-col gap-2">
-								<div className="text-sm font-medium text-muted-foreground">
-									Paid Time
+									<div className="group relative overflow-hidden rounded-lg border bg-white p-6 shadow-sm transition-all hover:shadow-md">
+										<div className="flex flex-col gap-2">
+											<div className="text-sm font-medium text-muted-foreground">
+												Paid Time
+											</div>
+											<div className="text-3xl font-bold text-green-600">
+												{formatCurrency(reports.paidAmount)}
+											</div>
+											<div className="text-sm text-muted-foreground">
+												{formatDuration(reports.paidTime)}
+											</div>
+										</div>
+										<div className="absolute inset-x-0 bottom-0 h-1 bg-green-500/10 group-hover:bg-green-500/20" />
+									</div>
 								</div>
-								<div className="text-3xl font-bold text-green-600">
-									{formatCurrency(reports.paidAmount)}
+							</TabsContent>
+							<TabsContent value="burndown">
+								<div className="rounded-lg border bg-white p-6 shadow-sm">
+									<BurndownChart entries={entries} />
 								</div>
-								<div className="text-sm text-muted-foreground">
-									{formatDuration(reports.paidTime)}
-								</div>
-							</div>
-							<div className="absolute inset-x-0 bottom-0 h-1 bg-green-500/10 group-hover:bg-green-500/20" />
-						</div>
+							</TabsContent>
+						</Tabs>
 					</div>
 				) : null}
 				<Table>
@@ -596,6 +638,10 @@ const presets = [
 			to: endOfYear(subYears(new Date(), 1)),
 		}),
 	},
+	{
+		label: <span className="text-blue-500">Clear</span>,
+		getValue: () => undefined,
+	},
 ]
 
 export function CalendarDateRangePicker({
@@ -645,14 +691,14 @@ export function CalendarDateRangePicker({
 					</Button>
 				</PopoverTrigger>
 				<PopoverContent className="mr-2 flex w-auto p-0" align="start">
-					<div className="border-b border-border p-3">
-						<div className="flex flex-col gap-2">
+					<div className="border-b border-border p-1">
+						<div className="flex flex-col gap-2 pt-2">
 							{presets.map(preset => (
 								<Button
-									key={preset.label}
+									key={preset.label.toString()}
 									variant="ghost"
 									size="sm"
-									className="w-full justify-start font-normal"
+									className="w-full justify-start px-2 py-2 font-normal"
 									onClick={() => {
 										const newDate = preset.getValue()
 										setDate(newDate)
@@ -677,6 +723,165 @@ export function CalendarDateRangePicker({
 					/>
 				</PopoverContent>
 			</Popover>
+		</div>
+	)
+}
+
+function BurndownChart({ entries }: { entries: JsonifyObject<TimeEntry>[] }) {
+	const currentMonth = new Date()
+	const lastMonth = subMonths(currentMonth, 1)
+
+	const currentMonthDays = eachDayOfInterval({
+		start: startOfMonth(currentMonth),
+		end: endOfMonth(currentMonth),
+	})
+
+	const lastMonthDays = eachDayOfInterval({
+		start: startOfMonth(lastMonth),
+		end: endOfMonth(lastMonth),
+	})
+
+	const getHoursForDay = (date: Date, entries: JsonifyObject<TimeEntry>[]) => {
+		return entries
+			.filter(entry => {
+				const entryDate = new Date(entry.startTime)
+				return isSameDay(entryDate, date)
+			})
+			.reduce((total, entry) => {
+				if (!entry.endTime) return total
+				const duration =
+					(new Date(entry.endTime).getTime() -
+						new Date(entry.startTime).getTime()) /
+					1000 /
+					60 /
+					60
+				return total + duration
+			}, 0)
+	}
+
+	const getCurrentMonthEntries = () => {
+		return entries.filter(entry => {
+			const entryDate = new Date(entry.startTime)
+			return (
+				entryDate >= startOfMonth(currentMonth) &&
+				entryDate <= endOfMonth(currentMonth)
+			)
+		})
+	}
+
+	const getLastMonthEntries = () => {
+		return entries.filter(entry => {
+			const entryDate = new Date(entry.startTime)
+			return (
+				entryDate >= startOfMonth(lastMonth) &&
+				entryDate <= endOfMonth(lastMonth)
+			)
+		})
+	}
+
+	let currentMonthRunningTotal = 0
+	let lastMonthRunningTotal = 0
+
+	const today = new Date()
+	const data = currentMonthDays.map((day, index) => {
+		const isInFuture = day > today
+		const currentMonthHours = isInFuture
+			? 0
+			: getHoursForDay(day, getCurrentMonthEntries())
+		const lastMonthHours = getHoursForDay(
+			lastMonthDays[index],
+			getLastMonthEntries(),
+		)
+
+		if (!isInFuture) {
+			currentMonthRunningTotal += currentMonthHours
+		}
+		lastMonthRunningTotal += lastMonthHours
+
+		return {
+			date: format(day, 'MMM dd'),
+			current: isInFuture ? null : Number(currentMonthRunningTotal.toFixed(2)),
+			previous: Number(lastMonthRunningTotal.toFixed(2)),
+		}
+	})
+
+	return (
+		<div className="h-[400px] w-full">
+			<ResponsiveContainer width="100%" height="100%">
+				<LineChart
+					data={data}
+					margin={{ top: 20, right: 20, bottom: 20, left: 20 }}
+				>
+					<XAxis
+						dataKey="date"
+						axisLine={false}
+						tickLine={false}
+						dy={10}
+						tick={{ fill: '#94a3b8', fontSize: 12 }}
+					/>
+					<YAxis
+						axisLine={false}
+						tickLine={false}
+						dx={-10}
+						tick={{ fill: '#94a3b8', fontSize: 12 }}
+					/>
+					<RechartsTooltip
+						contentStyle={{
+							backgroundColor: 'white',
+							border: 'none',
+							borderRadius: '8px',
+							boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
+							padding: '12px',
+						}}
+						formatter={(value: any) =>
+							value === null
+								? ['-', 'Total Hours']
+								: [`${Number(value).toFixed(1)}h`, 'Total Hours']
+						}
+						labelStyle={{ color: '#94a3b8', marginBottom: '4px' }}
+					/>
+					<Legend
+						verticalAlign="top"
+						height={36}
+						iconType="circle"
+						formatter={value => (
+							<span style={{ color: '#64748b', fontSize: '14px' }}>
+								{value}
+							</span>
+						)}
+					/>
+					<Line
+						type="monotone"
+						dataKey="current"
+						stroke="#2563eb"
+						strokeWidth={3}
+						name="Current Month"
+						dot={false}
+						activeDot={{
+							r: 6,
+							fill: '#2563eb',
+							stroke: 'white',
+							strokeWidth: 2,
+						}}
+						connectNulls
+					/>
+					<Line
+						type="monotone"
+						dataKey="previous"
+						stroke="#94a3b8"
+						strokeWidth={2}
+						strokeDasharray="5 5"
+						name="Previous Month"
+						dot={false}
+						activeDot={{
+							r: 6,
+							fill: '#94a3b8',
+							stroke: 'white',
+							strokeWidth: 2,
+						}}
+					/>
+				</LineChart>
+			</ResponsiveContainer>
 		</div>
 	)
 }

@@ -78,6 +78,10 @@ async function seed() {
 
 	console.time('⏱️ Created time entries...')
 	const baseDate = new Date()
+	const lastMonth = new Date(baseDate)
+	lastMonth.setMonth(lastMonth.getMonth() - 1)
+
+	// Current month entries
 	await Promise.all([
 		prisma.timeEntry.create({
 			data: {
@@ -104,6 +108,46 @@ async function seed() {
 				endTime: new Date(baseDate.setHours(baseDate.getHours() + 4)),
 				hourlyRate: 200,
 				clientId: clientThree.id,
+			},
+		}),
+	])
+
+	// Previous month entries
+	await Promise.all([
+		prisma.timeEntry.create({
+			data: {
+				description: 'Previous Month Development',
+				startTime: new Date(lastMonth.setDate(5)),
+				endTime: new Date(lastMonth.setHours(lastMonth.getHours() + 6)),
+				hourlyRate: 100,
+				clientId: clientOne.id,
+			},
+		}),
+		prisma.timeEntry.create({
+			data: {
+				description: 'Previous Month Design',
+				startTime: new Date(lastMonth.setDate(12)),
+				endTime: new Date(lastMonth.setHours(lastMonth.getHours() + 4)),
+				hourlyRate: 150,
+				clientId: clientTwo.id,
+			},
+		}),
+		prisma.timeEntry.create({
+			data: {
+				description: 'Previous Month Consulting',
+				startTime: new Date(lastMonth.setDate(18)),
+				endTime: new Date(lastMonth.setHours(lastMonth.getHours() + 8)),
+				hourlyRate: 200,
+				clientId: clientThree.id,
+			},
+		}),
+		prisma.timeEntry.create({
+			data: {
+				description: 'Previous Month Development 2',
+				startTime: new Date(lastMonth.setDate(25)),
+				endTime: new Date(lastMonth.setHours(lastMonth.getHours() + 5)),
+				hourlyRate: 100,
+				clientId: clientOne.id,
 			},
 		}),
 	])
