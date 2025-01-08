@@ -230,19 +230,21 @@ model TimeEntry {
 }
 
 model Invoice {
-  id          String      @id @default(cuid())
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
-  sentAt      DateTime?
-  paidAt      DateTime?
-  number      String      @unique
-  issueDate   DateTime    @default(now())
-  dueDate     DateTime
-  clientId    String
-  client      Client      @relation(fields: [clientId], references: [id], onDelete: Cascade)
-  timeEntries TimeEntry[]
-  tax         Decimal?
-  discount    Decimal?
+  id               String      @id @default(cuid())
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+  entriesStartDate DateTime?
+  entriesEndDate   DateTime?
+  sentAt           DateTime?
+  paidAt           DateTime?
+  number           String      @unique
+  issueDate        DateTime    @default(now())
+  dueDate          DateTime
+  clientId         String
+  client           Client      @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  timeEntries      TimeEntry[]
+  tax              Decimal?
+  discount         Decimal?
 
   @@map("invoices")
 }

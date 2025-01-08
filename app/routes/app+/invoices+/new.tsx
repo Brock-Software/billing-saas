@@ -3,12 +3,19 @@ import {
 	type LoaderFunctionArgs,
 	type ActionFunctionArgs,
 } from '@remix-run/node'
-import { Form, Link, useLoaderData } from '@remix-run/react'
+import {
+	Form,
+	Link,
+	useLoaderData,
+	useSearchParams,
+	useSubmit,
+} from '@remix-run/react'
 import { withZod } from '@remix-validated-form/with-zod'
 import { useState } from 'react'
 import { validationError } from 'remix-validated-form'
 import { z } from 'zod'
 import { zfd } from 'zod-form-data'
+import { CalendarDateRangePicker } from '#app/components/time-entries-table.tsx'
 import { Button } from '#app/components/ui/button.tsx'
 import { Input } from '#app/components/ui/input.tsx'
 import { getOrgId } from '#app/routes/api+/preferences+/organization/cookie.server.ts'
@@ -18,6 +25,10 @@ import { redirectWithToast } from '#app/utils/toast.server.ts'
 
 export async function loader({ request }: LoaderFunctionArgs) {
 	const orgId = getOrgId(request)!
+	const url = new URL(request.url)
+	const startDate = url.searchParams.get('startDate')
+	const endDate = url.searchParams.get('endDate')
+
 	const org = await prisma.organization.findUniqueOrThrow({
 		where: { id: orgId },
 		include: {
@@ -26,7 +37,17 @@ export async function loader({ request }: LoaderFunctionArgs) {
 				include: {
 					_count: { select: { invoices: true } },
 					timeEntries: {
-						where: { invoiceId: null },
+						where: {
+							invoiceId: null,
+							...(startDate && endDate
+								? {
+										startTime: {
+											gte: new Date(startDate),
+											lte: new Date(endDate),
+										},
+									}
+								: {}),
+						},
 						orderBy: { startTime: 'desc' },
 					},
 				},
@@ -40,6 +61,8 @@ export async function loader({ request }: LoaderFunctionArgs) {
 const validator = withZod(
 	z.object({
 		clientId: z.string(),
+		startDate: z.string(),
+		endDate: z.string(),
 		dueDate: z.string(),
 		tax: zfd.numeric(),
 		discount: zfd.numeric(),
@@ -57,6 +80,8 @@ export async function action({ request }: ActionFunctionArgs) {
 		const invoice = await tx.invoice.create({
 			data: {
 				number: data.invoiceNumber,
+				entriesStartDate: new Date(data.startDate),
+				entriesEndDate: new Date(data.endDate),
 				dueDate: new Date(data.dueDate + 'T00:00:00'),
 				tax: data.tax,
 				discount: data.discount,
@@ -91,6 +116,8 @@ export default function NewInvoice() {
 	const [netDays, setNetDays] = useState(15)
 	const [tax, setTax] = useState(0)
 	const [discount, setDiscount] = useState(0)
+	const [searchParams] = useSearchParams()
+	const submit = useSubmit()
 
 	const client = org.clients.find(c => c.id === selectedClient)
 	const totalInvoices = org.clients
@@ -286,6 +313,38 @@ export default function NewInvoice() {
 										</option>
 									))}
 								</select>
+							</div>
+
+							<div>
+								<label className="mb-2 block text-sm font-medium">
+									Date Range
+								</label>
+								<input
+									type="hidden"
+									name="startDate"
+									value={searchParams.get('startDate') ?? ''}
+								/>
+								<input
+									type="hidden"
+									name="endDate"
+									value={searchParams.get('endDate') ?? ''}
+								/>
+								<CalendarDateRangePicker
+									onChange={range => {
+										const params = new URLSearchParams(searchParams)
+										if (range?.from) {
+											params.set('startDate', range.from.toISOString())
+										} else {
+											params.delete('startDate')
+										}
+										if (range?.to) {
+											params.set('endDate', range.to.toISOString())
+										} else {
+											params.delete('endDate')
+										}
+										submit(params)
+									}}
+								/>
 							</div>
 
 							<div>

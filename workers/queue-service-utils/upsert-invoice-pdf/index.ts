@@ -79,33 +79,40 @@ export async function upsertInvoicePdf(
 		include: { timeEntries: true, client: { include: { organization: true } } },
 	})
 
-	const timeEntries = invoice.timeEntries.map(entry => {
-		const hours = entry.endTime
-			? (new Date(entry.endTime).getTime() -
-					new Date(entry.startTime).getTime()) /
-				1000 /
-				60 /
-				60
-			: 0
-		const rate =
-			entry.hourlyRate !== null
-				? Number(entry.hourlyRate)
-				: invoice.client.hourlyRate !== null
-					? Number(invoice.client.hourlyRate)
-					: 0
+	const timeEntries = invoice.timeEntries
+		.filter(entry =>
+			invoice.entriesStartDate && invoice.entriesEndDate && entry.endTime
+				? entry.startTime >= invoice.entriesStartDate &&
+					entry.endTime <= invoice.entriesEndDate
+				: true,
+		)
+		.map(entry => {
+			const hours = entry.endTime
+				? (new Date(entry.endTime).getTime() -
+						new Date(entry.startTime).getTime()) /
+					1000 /
+					60 /
+					60
+				: 0
+			const rate =
+				entry.hourlyRate !== null
+					? Number(entry.hourlyRate)
+					: invoice.client.hourlyRate !== null
+						? Number(invoice.client.hourlyRate)
+						: 0
 
-		return {
-			...entry,
-			date: new Date(entry.startTime).toLocaleDateString('en-US', {
-				year: 'numeric',
-				month: 'long',
-				day: 'numeric',
-			}),
-			hours,
-			rate,
-			amount: hours * rate,
-		}
-	})
+			return {
+				...entry,
+				date: new Date(entry.startTime).toLocaleDateString('en-US', {
+					year: 'numeric',
+					month: 'long',
+					day: 'numeric',
+				}),
+				hours,
+				rate,
+				amount: hours * rate,
+			}
+		})
 
 	const subtotal = timeEntries.reduce((sum, entry) => sum + entry.amount, 0)
 	const taxAmount = invoice.tax ? subtotal * Number(invoice.tax) : 0

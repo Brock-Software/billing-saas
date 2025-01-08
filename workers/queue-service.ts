@@ -28,20 +28,24 @@ const prisma = new PrismaClient().$extends({
 		$allModels: {
 			...writeOperations.reduce(
 				(acc, operation) => {
-					acc[operation] = async ({ model, operation, args }: any) => {
-						const response = await fetch(
-							`${process.env.BASE_URL}/api/queue-service/write`,
-							{
-								method: 'POST',
-								body: JSON.stringify({ model, operation, args }),
-								headers: {
-									Authorization: `Bearer ${process.env.QUEUE_SERVICE_TOKEN}`,
-									'Content-Type': 'application/json',
+					acc[operation] = async ({ model, operation, args, query }: any) => {
+						if (process.env.NODE_ENV === 'production') {
+							const response = await fetch(
+								`${process.env.BASE_URL}/api/queue-service/write`,
+								{
+									method: 'POST',
+									body: JSON.stringify({ model, operation, args }),
+									headers: {
+										Authorization: `Bearer ${process.env.QUEUE_SERVICE_TOKEN}`,
+										'Content-Type': 'application/json',
+									},
 								},
-							},
-						)
-						const json = await response.json()
-						return json
+							)
+							const json = await response.json()
+							return json
+						} else {
+							return query(args)
+						}
 					}
 					return acc
 				},
