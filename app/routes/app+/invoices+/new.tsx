@@ -176,7 +176,7 @@ export default function NewInvoice() {
 						<tr className="border-b border-gray-200">
 							<th className="py-2 text-left">Date</th>
 							<th className="py-2 text-left">Description</th>
-							<th className="py-2 text-right">Hours</th>
+							<th className="py-2 text-right">Qty</th>
 							<th className="py-2 text-right">Rate</th>
 							<th className="py-2 text-right">Amount</th>
 						</tr>

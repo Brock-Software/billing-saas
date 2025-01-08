@@ -151,7 +151,7 @@ export default function Route() {
 					<TableRow>
 						<TableHead>Name</TableHead>
 						<TableHead>Rate (default)</TableHead>
-						<TableHead>Hours</TableHead>
+						<TableHead>Qty</TableHead>
 						<TableHead>Amount</TableHead>
 					</TableRow>
 				</TableHeader>
