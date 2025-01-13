@@ -80,8 +80,12 @@ export async function action({ request }: ActionFunctionArgs) {
 		const invoice = await tx.invoice.create({
 			data: {
 				number: data.invoiceNumber,
-				entriesStartDate: new Date(data.startDate),
-				entriesEndDate: new Date(data.endDate),
+				...(data.startDate && data.endDate
+					? {
+							entriesStartDate: new Date(data.startDate),
+							entriesEndDate: new Date(data.endDate),
+						}
+					: {}),
 				dueDate: new Date(data.dueDate + 'T00:00:00'),
 				tax: data.tax,
 				discount: data.discount,
@@ -90,7 +94,18 @@ export async function action({ request }: ActionFunctionArgs) {
 		})
 
 		await tx.timeEntry.updateMany({
-			where: { clientId: data.clientId, invoiceId: null },
+			where: {
+				clientId: data.clientId,
+				invoiceId: null,
+				...(data.startDate && data.endDate
+					? {
+							startTime: {
+								gte: new Date(data.startDate),
+								lte: new Date(data.endDate),
+							},
+						}
+					: {}),
+			},
 			data: { invoiceId: invoice.id },
 		})
 

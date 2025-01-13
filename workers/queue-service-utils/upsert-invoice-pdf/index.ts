@@ -81,9 +81,9 @@ export async function upsertInvoicePdf(
 
 	const timeEntries = invoice.timeEntries
 		.filter(entry =>
-			invoice.entriesStartDate && invoice.entriesEndDate && entry.endTime
+			invoice.entriesStartDate && invoice.entriesEndDate
 				? entry.startTime >= invoice.entriesStartDate &&
-					entry.endTime <= invoice.entriesEndDate
+					entry.startTime <= invoice.entriesEndDate
 				: true,
 		)
 		.map(entry => {
