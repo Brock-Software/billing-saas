@@ -15,10 +15,11 @@ import { z } from 'zod'
 import { FormCheckbox } from '#app/components/forms/form-checkbox.tsx'
 import { FormInput } from '#app/components/forms/form-input.tsx'
 import { Button } from '#app/components/ui/button.tsx'
+import { setOrgId } from '#app/routes/api+/preferences+/organization/cookie.server.ts'
 import { requireAnonymous, sessionKey, signup } from '#app/utils/auth.server.ts'
 import { validateCSRF } from '#app/utils/csrf.server.ts'
 import { checkHoneypot } from '#app/utils/honeypot.server.ts'
-import { useIsPending } from '#app/utils/misc.js'
+import { combineHeaders, useIsPending } from '#app/utils/misc.js'
 import {
 	NameSchema,
 	PasswordAndConfirmPasswordSchema,
@@ -62,18 +63,18 @@ export async function action({ request }: ActionFunctionArgs) {
 	const { data, error } = await validator.validate(formData)
 	if (error) return validationError(error)
 	const { remember, redirectTo } = data
-	const session = await signup({ ...data, email })
+	const signupResult = await signup({ ...data, email })
 
 	const authSession = await authSessionStorage.getSession(
 		request.headers.get('cookie'),
 	)
-	authSession.set(sessionKey, session.id)
+	authSession.set(sessionKey, signupResult.session.id)
 	const verifySession = await verifySessionStorage.getSession()
 	const headers = new Headers()
 	headers.append(
 		'set-cookie',
 		await authSessionStorage.commitSession(authSession, {
-			expires: remember ? session.expirationDate : undefined,
+			expires: remember ? signupResult.session.expirationDate : undefined,
 		}),
 	)
 	headers.append(
@@ -83,8 +84,12 @@ export async function action({ request }: ActionFunctionArgs) {
 
 	return redirectWithToast(
 		safeRedirect(redirectTo),
-		{ title: 'Welcome', description: 'Thanks for signing up!' },
-		{ headers },
+		{ title: 'Welcome!', description: 'Thanks for signing up!' },
+		{
+			headers: combineHeaders(headers, {
+				'Set-Cookie': setOrgId(signupResult.orgId),
+			}),
+		},
 	)
 }
 

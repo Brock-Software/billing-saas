@@ -15,10 +15,8 @@ import { GeneralErrorBoundary } from '#app/components/error-boundary.tsx'
 import { FormInput } from '#app/components/forms/form-input.tsx'
 import { Button, buttonVariants } from '#app/components/ui/button.tsx'
 import { requireAnonymous } from '#app/utils/auth.server.ts'
-import { validateCSRF } from '#app/utils/csrf.server.ts'
 import { prisma } from '#app/utils/db.server.ts'
 import { sendEmail } from '#app/utils/email.server.ts'
-import { checkHoneypot } from '#app/utils/honeypot.server.ts'
 import { useIsPending } from '#app/utils/misc.tsx'
 import { EmailSchema } from '#app/utils/schemas/user.ts'
 import { prepareVerification } from './verify.server.ts'
@@ -37,8 +35,8 @@ export async function loader({ request }: LoaderFunctionArgs) {
 export async function action({ request }: ActionFunctionArgs) {
 	const formData = await request.formData()
 
-	await validateCSRF(formData, request.headers)
-	checkHoneypot(formData)
+	// await validateCSRF(formData, request.headers)
+	// checkHoneypot(formData)
 
 	const { error, data } = await validator.validate(formData)
 	if (error) return validationError(error)

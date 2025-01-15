@@ -13,6 +13,7 @@ import { z } from 'zod'
 import { GeneralErrorBoundary } from '#app/components/error-boundary'
 import { FormInput } from '#app/components/forms/form-input.js'
 import { Button, buttonVariants } from '#app/components/ui/button'
+import { setOrgId } from '#app/routes/api+/preferences+/organization/cookie.server.ts'
 import { login, requireAnonymous } from '#app/utils/auth.server'
 import { checkHoneypot } from '#app/utils/honeypot.server'
 import { DEFAULT_ROUTE, useIsPending } from '#app/utils/misc'
@@ -39,14 +40,19 @@ export async function action({ request }: ActionFunctionArgs) {
 	const { error, data } = await validator.validate(formData)
 	if (error) return validationError(error)
 
-	const session = await login(data)
+	const loginResult = await login(data)
 
-	if (session) {
-		return handleNewSession({
-			request,
-			session,
-			redirectTo: data.redirectTo ?? DEFAULT_ROUTE,
-		})
+	if (loginResult) {
+		return handleNewSession(
+			{
+				request,
+				session: loginResult.session,
+				redirectTo: data.redirectTo ?? DEFAULT_ROUTE,
+			},
+			{
+				headers: { 'Set-Cookie': setOrgId(loginResult.orgId) },
+			},
+		)
 	} else {
 		return validationError(
 			{ fieldErrors: { email: 'Invalid email or password' } },

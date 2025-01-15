@@ -108,7 +108,11 @@ export async function verifyUserPassword(
 ) {
 	const userWithPassword = await prisma.user.findUnique({
 		where,
-		select: { id: true, password: { select: { hash: true } } },
+		select: {
+			id: true,
+			password: { select: { hash: true } },
+			organizations: { select: { id: true } },
+		},
 	})
 
 	if (!userWithPassword || !userWithPassword.password) {
@@ -121,7 +125,10 @@ export async function verifyUserPassword(
 		return null
 	}
 
-	return { id: userWithPassword.id }
+	return {
+		id: userWithPassword.id,
+		orgId: userWithPassword.organizations[0].id,
+	}
 }
 
 export async function login({
@@ -140,7 +147,7 @@ export async function login({
 			userId: user.id,
 		},
 	})
-	return session
+	return { session, orgId: user.orgId }
 }
 
 export async function resetUserPassword({
@@ -192,8 +199,12 @@ export async function signup({
 				},
 			},
 		},
-		select: { id: true, expirationDate: true },
+		select: {
+			id: true,
+			expirationDate: true,
+			user: { select: { organizations: { select: { id: true } } } },
+		},
 	})
 
-	return session
+	return { session, orgId: session.user.organizations[0].id }
 }
