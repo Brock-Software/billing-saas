@@ -5,6 +5,7 @@ import {
 } from '@remix-run/node'
 import { redirect, useLoaderData } from '@remix-run/react'
 import { withZod } from '@remix-validated-form/with-zod'
+import { useState } from 'react'
 import {
 	ValidatedForm,
 	validationError,
@@ -17,6 +18,7 @@ import { Button } from '#app/components/ui/button'
 import { Switch } from '#app/components/ui/switch'
 import { setOrgId } from '#app/routes/api+/preferences+/organization/cookie.server.ts'
 import { requireUserId } from '#app/utils/auth.server.ts'
+import { encryptData } from '#app/utils/crypto.server.ts'
 import { prisma } from '#app/utils/db.server.ts'
 import { NameSchema } from '#app/utils/schemas/user'
 
@@ -42,6 +44,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 					phone: true,
 					email: true,
 					autoStop: true,
+					stripeKeyHash: true,
 				},
 			},
 			image: { select: { id: true } },
@@ -74,6 +77,7 @@ const validator = withZod(
 				zip: z.string().nullish(),
 				phone: z.string().nullish(),
 				email: z.string().nullish(),
+				stripeKey: z.string().nullish(),
 				autoStop: zfd.checkbox(),
 			}),
 		),
@@ -108,6 +112,9 @@ export async function action({ request }: ActionFunctionArgs) {
 						zip: org.zip,
 						phone: org.phone,
 						email: org.email,
+						stripeKeyHash: org.stripeKey
+							? encryptData(org.stripeKey, process.env.ENCRYPTION_KEY!)
+							: undefined,
 						autoStop: org.autoStop,
 					},
 					update: {
@@ -119,6 +126,9 @@ export async function action({ request }: ActionFunctionArgs) {
 						zip: org.zip,
 						phone: org.phone,
 						email: org.email,
+						stripeKeyHash: org.stripeKey
+							? encryptData(org.stripeKey, process.env.ENCRYPTION_KEY!)
+							: undefined,
 						autoStop: org.autoStop,
 					},
 				})),
@@ -135,6 +145,9 @@ export async function action({ request }: ActionFunctionArgs) {
 
 export default function ProfileRoute() {
 	const data = useLoaderData<typeof loader>()
+	const [editingStripeKeys, setEditingStripeKeys] = useState<
+		Record<string, boolean>
+	>({})
 
 	return (
 		<div className="flex h-full grow flex-col gap-4">
@@ -223,6 +236,47 @@ export default function ProfileRoute() {
 													label="Email"
 													type="email"
 												/>
+												<div className="space-y-2">
+													<div className="flex items-center justify-between">
+														<label className="text-sm font-medium">
+															Stripe Secret Key
+														</label>
+														{field.defaultValue.stripeKeyHash ? (
+															<Button
+																type="button"
+																variant="ghost"
+																size="sm"
+																onClick={() => {
+																	setEditingStripeKeys(prev => ({
+																		...prev,
+																		[field.key]: !prev[field.key],
+																	}))
+																}}
+															>
+																{editingStripeKeys[field.key]
+																	? 'Cancel'
+																	: 'Change'}
+															</Button>
+														) : null}
+													</div>
+													{field.defaultValue.stripeKeyHash &&
+													!editingStripeKeys[field.key] ? (
+														<p className="text-sm text-muted-foreground">
+															✓ Stripe key is set
+														</p>
+													) : (
+														<FormInput
+															name={`organizations[${index}].stripeKey`}
+															hideLabel
+															type="password"
+															placeholder={
+																field.defaultValue.stripeKeyHash
+																	? 'Enter new key'
+																	: 'Enter key'
+															}
+														/>
+													)}
+												</div>
 												<div className="flex items-center gap-2">
 													<Switch
 														name={`organizations[${index}].autoStop`}

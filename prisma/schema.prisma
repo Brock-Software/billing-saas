@@ -31,20 +31,21 @@ model User {
 }
 
 model Organization {
-  id        String   @id @default(cuid())
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  name      String
-  line1     String?
-  line2     String?
-  city      String?
-  state     String?
-  zip       String?
-  phone     String?
-  email     String?
-  autoStop  Boolean  @default(true)
-  users     User[]
-  clients   Client[]
+  id            String   @id @default(cuid())
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  name          String
+  line1         String?
+  line2         String?
+  city          String?
+  state         String?
+  zip           String?
+  phone         String?
+  email         String?
+  stripeKeyHash String?
+  autoStop      Boolean  @default(true)
+  users         User[]
+  clients       Client[]
 
   @@map("organizations")
 }
@@ -191,24 +192,25 @@ model Setting {
 }
 
 model Client {
-  id           String       @id @default(cuid())
-  createdAt    DateTime     @default(now())
-  deletedAt    DateTime?
-  updatedAt    DateTime     @updatedAt
-  name         String
-  email        String?
-  company      String?
-  line1        String?
-  line2        String?
-  city         String?
-  state        String?
-  zip          String?
-  phone        String?
-  hourlyRate   Decimal?
-  timeEntries  TimeEntry[]
-  invoices     Invoice[]
-  orgId        String
-  organization Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  id               String       @id @default(cuid())
+  createdAt        DateTime     @default(now())
+  deletedAt        DateTime?
+  updatedAt        DateTime     @updatedAt
+  stripeCustomerId String?
+  name             String
+  email            String?
+  company          String?
+  line1            String?
+  line2            String?
+  city             String?
+  state            String?
+  zip              String?
+  phone            String?
+  hourlyRate       Decimal?
+  timeEntries      TimeEntry[]
+  invoices         Invoice[]
+  orgId            String
+  organization     Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
 
   @@map("clients")
 }
@@ -230,21 +232,22 @@ model TimeEntry {
 }
 
 model Invoice {
-  id               String      @id @default(cuid())
-  createdAt        DateTime    @default(now())
-  updatedAt        DateTime    @updatedAt
-  entriesStartDate DateTime?
-  entriesEndDate   DateTime?
-  sentAt           DateTime?
-  paidAt           DateTime?
-  number           String
-  issueDate        DateTime    @default(now())
-  dueDate          DateTime
-  clientId         String
-  client           Client      @relation(fields: [clientId], references: [id], onDelete: Cascade)
-  timeEntries      TimeEntry[]
-  tax              Decimal?
-  discount         Decimal?
+  id                String      @id @default(cuid())
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+  entriesStartDate  DateTime?
+  entriesEndDate    DateTime?
+  sentAt            DateTime?
+  paidAt            DateTime?
+  number            String
+  issueDate         DateTime    @default(now())
+  dueDate           DateTime
+  stripePaymentLink String?
+  clientId          String
+  client            Client      @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  timeEntries       TimeEntry[]
+  tax               Decimal?
+  discount          Decimal?
 
   @@unique([number, clientId])
   @@map("invoices")
