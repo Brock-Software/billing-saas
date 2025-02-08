@@ -111,6 +111,9 @@ type Props = {
 		paidAmount: number
 		paidTime: number
 	}
+	burndownEntries?: JsonifyObject<
+		TimeEntry & { client: Client | null; invoice: Invoice | null }
+	>[]
 }
 
 export function TimeEntriesTable({
@@ -119,6 +122,7 @@ export function TimeEntriesTable({
 	clients,
 	formAction = '/app/time-entries',
 	reports,
+	burndownEntries,
 }: Props) {
 	const fetcher = useFetcher()
 	const [searchParams] = useSearchParams()
@@ -231,7 +235,7 @@ export function TimeEntriesTable({
 							</TabsContent>
 							<TabsContent value="burndown">
 								<div className="rounded-lg border bg-white p-6 shadow-sm">
-									<BurndownChart entries={entries} />
+									<BurndownChart entries={burndownEntries || entries} />
 								</div>
 							</TabsContent>
 						</Tabs>

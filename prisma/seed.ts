@@ -81,76 +81,89 @@ async function seed() {
 	const lastMonth = new Date(baseDate)
 	lastMonth.setMonth(lastMonth.getMonth() - 1)
 
-	// Current month entries
-	await Promise.all([
-		prisma.timeEntry.create({
-			data: {
-				description: 'Development work',
-				startTime: new Date(baseDate.setHours(baseDate.getHours() - 2)),
-				endTime: new Date(),
-				hourlyRate: 100,
-				clientId: clientOne.id,
-			},
-		}),
-		prisma.timeEntry.create({
-			data: {
-				description: 'Design work',
-				startTime: new Date(baseDate.setDate(baseDate.getDate() - 1)),
-				endTime: new Date(baseDate.setHours(baseDate.getHours() + 3)),
-				hourlyRate: 150,
-				clientId: clientTwo.id,
-			},
-		}),
-		prisma.timeEntry.create({
-			data: {
-				description: 'Consulting',
-				startTime: new Date(baseDate.setDate(baseDate.getDate() - 2)),
-				endTime: new Date(baseDate.setHours(baseDate.getHours() + 4)),
-				hourlyRate: 200,
-				clientId: clientThree.id,
-			},
-		}),
-	])
+	// Helper function to create dates
+	const createDate = (date: Date, day: number, hour = 9) => {
+		const newDate = new Date(date)
+		newDate.setDate(day)
+		newDate.setHours(hour, 0, 0, 0)
+		return newDate
+	}
 
-	// Previous month entries
-	await Promise.all([
-		prisma.timeEntry.create({
-			data: {
-				description: 'Previous Month Development',
-				startTime: new Date(lastMonth.setDate(5)),
-				endTime: new Date(lastMonth.setHours(lastMonth.getHours() + 6)),
-				hourlyRate: 100,
-				clientId: clientOne.id,
-			},
-		}),
-		prisma.timeEntry.create({
-			data: {
-				description: 'Previous Month Design',
-				startTime: new Date(lastMonth.setDate(12)),
-				endTime: new Date(lastMonth.setHours(lastMonth.getHours() + 4)),
-				hourlyRate: 150,
-				clientId: clientTwo.id,
-			},
-		}),
-		prisma.timeEntry.create({
-			data: {
-				description: 'Previous Month Consulting',
-				startTime: new Date(lastMonth.setDate(18)),
-				endTime: new Date(lastMonth.setHours(lastMonth.getHours() + 8)),
-				hourlyRate: 200,
-				clientId: clientThree.id,
-			},
-		}),
-		prisma.timeEntry.create({
-			data: {
-				description: 'Previous Month Development 2',
-				startTime: new Date(lastMonth.setDate(25)),
-				endTime: new Date(lastMonth.setHours(lastMonth.getHours() + 5)),
-				hourlyRate: 100,
-				clientId: clientOne.id,
-			},
-		}),
-	])
+	// Current month entries - create entries every few days
+	const currentMonthEntries = []
+	for (let day = 1; day <= baseDate.getDate(); day += 2) {
+		currentMonthEntries.push(
+			prisma.timeEntry.create({
+				data: {
+					description: 'Development work',
+					startTime: createDate(baseDate, day, 9),
+					endTime: createDate(baseDate, day, 17),
+					hourlyRate: 100,
+					clientId: clientOne.id,
+				},
+			}),
+			prisma.timeEntry.create({
+				data: {
+					description: 'Design work',
+					startTime: createDate(baseDate, day, 10),
+					endTime: createDate(baseDate, day, 15),
+					hourlyRate: 150,
+					clientId: clientTwo.id,
+				},
+			}),
+			prisma.timeEntry.create({
+				data: {
+					description: 'Consulting',
+					startTime: createDate(baseDate, day, 13),
+					endTime: createDate(baseDate, day, 18),
+					hourlyRate: 200,
+					clientId: clientThree.id,
+				},
+			}),
+		)
+	}
+
+	// Previous month entries - create entries for the entire month
+	const lastMonthEntries = []
+	const daysInLastMonth = new Date(
+		lastMonth.getFullYear(),
+		lastMonth.getMonth() + 1,
+		0,
+	).getDate()
+
+	for (let day = 1; day <= daysInLastMonth; day += 2) {
+		lastMonthEntries.push(
+			prisma.timeEntry.create({
+				data: {
+					description: 'Previous Month Development',
+					startTime: createDate(lastMonth, day, 9),
+					endTime: createDate(lastMonth, day, 17),
+					hourlyRate: 100,
+					clientId: clientOne.id,
+				},
+			}),
+			prisma.timeEntry.create({
+				data: {
+					description: 'Previous Month Design',
+					startTime: createDate(lastMonth, day, 10),
+					endTime: createDate(lastMonth, day, 16),
+					hourlyRate: 150,
+					clientId: clientTwo.id,
+				},
+			}),
+			prisma.timeEntry.create({
+				data: {
+					description: 'Previous Month Consulting',
+					startTime: createDate(lastMonth, day, 11),
+					endTime: createDate(lastMonth, day, 19),
+					hourlyRate: 200,
+					clientId: clientThree.id,
+				},
+			}),
+		)
+	}
+
+	await Promise.all([...currentMonthEntries, ...lastMonthEntries])
 	console.timeEnd('⏱️ Created time entries...')
 
 	console.time(`🔒 Created users`)

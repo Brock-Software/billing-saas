@@ -3,6 +3,8 @@ import { type Fetcher, useFetcher, useFetchers } from '@remix-run/react'
 import { withZod } from '@remix-validated-form/with-zod'
 import { ValidatedForm, validationError } from 'remix-validated-form'
 import { z } from 'zod'
+import { requireUserId } from '#app/utils/auth.server.ts'
+import { prisma } from '#app/utils/db.server.ts'
 import { setOrgId } from './cookie.server'
 
 // Preference:
@@ -13,9 +15,22 @@ const Schema = z.object({ organizationId: z.string() })
 const validator = withZod(Schema)
 
 export async function action({ request }: ActionFunctionArgs) {
+	const userId = await requireUserId(request)
 	const formData = await request.formData()
 	const { error, data } = await validator.validate(formData)
 	if (error) return validationError(error)
+
+	const user = await prisma.user.findUnique({
+		where: { id: userId },
+		select: { organizations: { select: { id: true } } },
+	})
+
+	if (!user?.organizations.some(org => org.id === data.organizationId)) {
+		return validationError({
+			fieldErrors: { organizationId: 'Invalid organization' },
+		})
+	}
+
 	return json({}, { headers: { 'set-cookie': setOrgId(data.organizationId) } })
 }
 

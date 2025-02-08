@@ -5,6 +5,7 @@ import {
 	type LoaderFunctionArgs,
 } from '@remix-run/node'
 import { Link, useLoaderData, useFetcher } from '@remix-run/react'
+import { subMonths, startOfMonth, endOfMonth } from 'date-fns'
 import { Clock } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { TimeEntriesTable } from '#app/components/time-entries-table.tsx'
@@ -28,52 +29,74 @@ export async function loader({ request }: LoaderFunctionArgs) {
 		...(endDate && { lte: new Date(endDate) }),
 	}
 
-	const [clients, activeTimeEntry, timeEntries, timeEntriesCount] =
-		await Promise.all([
-			prisma.client.findMany({
-				select: {
-					id: true,
-					name: true,
-					company: true,
-					hourlyRate: true,
-					timeEntries: {
-						select: {
-							startTime: true,
-							endTime: true,
-						},
+	const currentMonth = new Date()
+	const lastMonth = subMonths(currentMonth, 1)
+
+	const [
+		clients,
+		activeTimeEntry,
+		timeEntries,
+		timeEntriesCount,
+		burndownEntries,
+	] = await Promise.all([
+		prisma.client.findMany({
+			select: {
+				id: true,
+				name: true,
+				company: true,
+				hourlyRate: true,
+				timeEntries: {
+					select: {
+						startTime: true,
+						endTime: true,
 					},
 				},
-				where: { organization: { id: orgId! }, deletedAt: null },
-			}),
-			prisma.timeEntry.findFirst({
-				where: {
-					endTime: null,
-					client: { organization: { id: orgId! }, deletedAt: null },
+			},
+			where: { organization: { id: orgId! }, deletedAt: null },
+		}),
+		prisma.timeEntry.findFirst({
+			where: {
+				endTime: null,
+				client: { organization: { id: orgId! }, deletedAt: null },
+			},
+		}),
+		prisma.timeEntry.findMany({
+			orderBy: { startTime: 'desc' },
+			include: { client: true, invoice: true },
+			where: {
+				client: {
+					organization: { id: orgId! },
+					deletedAt: null,
+					...(selectedClients.length ? { id: { in: selectedClients } } : {}),
 				},
-			}),
-			prisma.timeEntry.findMany({
-				orderBy: { startTime: 'desc' },
-				include: { client: true, invoice: true },
-				where: {
-					client: {
-						organization: { id: orgId! },
-						deletedAt: null,
-						...(selectedClients.length ? { id: { in: selectedClients } } : {}),
-					},
-					...(Object.keys(dateFilter).length ? { startTime: dateFilter } : {}),
+				...(Object.keys(dateFilter).length ? { startTime: dateFilter } : {}),
+			},
+		}),
+		prisma.timeEntry.count({
+			where: {
+				client: {
+					organization: { id: orgId! },
+					deletedAt: null,
+					...(selectedClients.length ? { id: { in: selectedClients } } : {}),
 				},
-			}),
-			prisma.timeEntry.count({
-				where: {
-					client: {
-						organization: { id: orgId! },
-						deletedAt: null,
-						...(selectedClients.length ? { id: { in: selectedClients } } : {}),
-					},
-					...(Object.keys(dateFilter).length ? { startTime: dateFilter } : {}),
+				...(Object.keys(dateFilter).length ? { startTime: dateFilter } : {}),
+			},
+		}),
+		prisma.timeEntry.findMany({
+			orderBy: { startTime: 'desc' },
+			include: { client: true, invoice: true },
+			where: {
+				client: {
+					organization: { id: orgId! },
+					deletedAt: null,
 				},
-			}),
-		])
+				startTime: {
+					gte: startOfMonth(lastMonth),
+					lte: endOfMonth(currentMonth),
+				},
+			},
+		}),
+	])
 
 	const reports = timeEntries.reduce(
 		(acc, entry) => {
@@ -119,6 +142,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 		timeEntries: timeEntries.slice(skip, skip + take),
 		timeEntriesCount,
 		reports,
+		burndownEntries,
 	}
 }
 
@@ -198,8 +222,14 @@ export async function action({ request }: ActionFunctionArgs) {
 }
 
 export default function Route() {
-	const { clients, activeTimeEntry, timeEntries, timeEntriesCount, reports } =
-		useLoaderData<typeof loader>()
+	const {
+		clients,
+		activeTimeEntry,
+		timeEntries,
+		timeEntriesCount,
+		reports,
+		burndownEntries,
+	} = useLoaderData<typeof loader>()
 	const startTimer = useFetcher<{ entry: TimeEntry | null }>()
 	const [entry, setEntry] = useState<typeof activeTimeEntry>(activeTimeEntry)
 
@@ -345,6 +375,7 @@ export default function Route() {
 				entriesCount={timeEntriesCount}
 				clients={clients as any}
 				reports={reports}
+				burndownEntries={burndownEntries as any}
 			/>
 		</div>
 	)

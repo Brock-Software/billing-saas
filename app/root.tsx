@@ -26,6 +26,10 @@ import { GlobalLoading } from './components/global-loading.tsx'
 import { Toaster } from './components/toaster.tsx'
 import { useNonce } from './contexts/nonce.ts'
 import {
+	getOrgId,
+	setOrgId,
+} from './routes/api+/preferences+/organization/cookie.server.ts'
+import {
 	type Theme,
 	getTheme,
 } from './routes/api+/preferences+/theme/cookie.server.ts'
@@ -115,11 +119,15 @@ export async function loader({ request }: LoaderFunctionArgs) {
 	const { toast, headers: toastHeaders } = await getToast(request)
 	const honeyProps = honeypot.getInputProps()
 	const [csrfToken, csrfCookieHeader] = await csrf.commitToken()
+	const orgId = getOrgId(request)
 
 	let headers = combineHeaders(
 		{ 'Server-Timing': timings.toString() },
 		toastHeaders,
 		csrfCookieHeader ? { 'set-cookie': csrfCookieHeader } : null,
+		!orgId && user?.organizations[0]?.id
+			? { 'Set-Cookie': setOrgId(user.organizations[0].id) }
+			: null,
 	)
 
 	return json(
