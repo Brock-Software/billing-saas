@@ -237,7 +237,7 @@ model Invoice {
   entriesEndDate   DateTime?
   sentAt           DateTime?
   paidAt           DateTime?
-  number           String      @unique
+  number           String
   issueDate        DateTime    @default(now())
   dueDate          DateTime
   clientId         String
@@ -246,5 +246,6 @@ model Invoice {
   tax              Decimal?
   discount         Decimal?
 
+  @@unique([number, clientId])
   @@map("invoices")
 }
