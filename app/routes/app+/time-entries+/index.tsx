@@ -1,5 +1,5 @@
 import {
-	type ActionFunctionArgs,
+	type ActionFunctionArgs,	
 	type LoaderFunctionArgs,
 	json,
 } from '@remix-run/node'
@@ -32,7 +32,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 		}),
 		prisma.timeEntry.count(),
 		prisma.client.findMany({
-			where: { organization: { id: getOrgId(request)! } },
+			where: { organization: { is: { id: getOrgId(request)! } } },
 		}),
 	])
 	return json({ entries, entriesCount, clients })

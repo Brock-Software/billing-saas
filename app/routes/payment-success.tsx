@@ -1,4 +1,22 @@
+import { useLoaderData } from "@remix-run/react"
+import type { LoaderFunctionArgs } from "@remix-run/node"
+import { json } from "@remix-run/node"
+
+type LoaderData = {
+	organizationName: string
+}
+
+export async function loader({ request }: LoaderFunctionArgs) {
+	// Get org name from URL params or your database
+	const url = new URL(request.url)
+	const organizationName = url.searchParams.get("org") || "your organization"
+	
+	return json<LoaderData>({ organizationName })
+}
+
 export default function PaymentSuccess() {
+	const { organizationName } = useLoaderData<LoaderData>()
+	
 	return (
 		<div className="flex min-h-screen flex-col items-center justify-center bg-gray-50 p-4">
 			<div className="w-full max-w-md space-y-8 text-center">
@@ -21,7 +39,7 @@ export default function PaymentSuccess() {
 					Payment Successful!
 				</h2>
 				<p className="mt-2 text-sm text-gray-600">
-					Thank you for your payment. The invoice has been marked as paid.
+					Thank you for your payment to {organizationName}. The invoice has been marked as paid.
 				</p>
 			</div>
 		</div>

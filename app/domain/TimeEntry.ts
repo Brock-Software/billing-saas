@@ -10,7 +10,7 @@ export class TimeEntry {
 		await prisma.timeEntry.updateMany({
 			where: {
 				endTime: null,
-				client: { organization: { id: orgId, autoStop: true } },
+				client: { organization: { is: { id: orgId, autoStop: true } } },
 			},
 			data: { endTime: new Date().toISOString() },
 		})
