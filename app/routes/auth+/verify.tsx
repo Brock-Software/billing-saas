@@ -16,7 +16,6 @@ import { requireAnonymous } from '#app/utils/auth.server.ts'
 import { validateCSRF } from '#app/utils/csrf.server.ts'
 import { prisma } from '#app/utils/db.server.ts'
 import { checkHoneypot } from '#app/utils/honeypot.server.ts'
-import { ensurePrimary } from '#app/utils/litefs.server.ts'
 import { useIsPending } from '#app/utils/misc.tsx'
 import { handleVerification as handleLoginTwoFactorVerification } from './login/utils.server.ts'
 import { handleVerification as handleOnboardingVerification } from './onboarding/utils.server.ts'
@@ -57,8 +56,6 @@ export async function action({ request }: ActionFunctionArgs) {
 			fieldErrors: { [codeQueryParam]: 'Invalid code' },
 		})
 	}
-
-	await ensurePrimary()
 
 	async function deleteVerification() {
 		if (!data) return

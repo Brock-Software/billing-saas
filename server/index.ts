@@ -216,6 +216,7 @@ app.all(
 		}),
 		mode: MODE,
 		// @sentry/remix needs to be updated to handle the function signature
+		// @ts-ignore
 		build: MODE === 'production' ? await getBuild() : getBuild,
 	}),
 )

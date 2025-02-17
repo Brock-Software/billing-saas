@@ -16,8 +16,7 @@ swap_size_mb = 512
 
 [processes]
   app = 'bun run start'
-  cron = 'supercronic crontab'
-  queue-service = 'sh -c "export PORT=8082 && bun run workers/queue-service.ts"'
+  queue-service = 'bun run workers/queue-service.ts'
 
 [[mounts]]
   source = 'data'
@@ -28,7 +27,7 @@ swap_size_mb = 512
   auto_extend_size_limit = '10GB'
 
 [http_service]
-  internal_port = 3000
+  internal_port = 8081
   force_https = true
   auto_stop_machines = 'stop'
   auto_start_machines = true
@@ -67,13 +66,6 @@ swap_size_mb = 512
     path = '/api/healthcheck'
     protocol = 'http'
     tls_skip_verify = false
-
-  [[services.http_checks]]
-    interval = '30s'
-    timeout = '5s'
-    grace_period = '10s'
-    method = 'GET'
-    path = '/litefs/health'
 
 [[vm]]
   cpu_kind = 'shared'
