@@ -12,6 +12,8 @@ const schema = z.object({
 	STRIPE_SUCCESS_URL: z.string(),
 	STRIPE_CANCEL_URL: z.string(),
 	ENCRYPTION_KEY: z.string(),
+	TURSO_DATABASE_URL: z.string(),
+	TURSO_AUTH_TOKEN: z.string(),
 	// If you plan on using Sentry, uncomment this line
 	// SENTRY_DSN: z.string(),
 	// If you plan to use Resend, uncomment this line

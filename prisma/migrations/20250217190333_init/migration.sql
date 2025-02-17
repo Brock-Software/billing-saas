@@ -15,7 +15,16 @@ CREATE TABLE "organizations" (
     "id" TEXT NOT NULL PRIMARY KEY,
     "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" DATETIME NOT NULL,
-    "name" TEXT NOT NULL
+    "name" TEXT NOT NULL,
+    "line1" TEXT,
+    "line2" TEXT,
+    "city" TEXT,
+    "state" TEXT,
+    "zip" TEXT,
+    "phone" TEXT,
+    "email" TEXT,
+    "stripeKeyHash" TEXT,
+    "autoStop" BOOLEAN NOT NULL DEFAULT true
 );
 
 -- CreateTable
@@ -121,12 +130,14 @@ CREATE TABLE "jobs" (
     "id" TEXT NOT NULL PRIMARY KEY,
     "type" TEXT NOT NULL,
     "data" TEXT NOT NULL,
-    "status" TEXT NOT NULL,
+    "status" TEXT NOT NULL DEFAULT 'pending',
     "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" DATETIME NOT NULL,
     "attempts" INTEGER NOT NULL DEFAULT 0,
     "maxAttempts" INTEGER NOT NULL DEFAULT 3,
-    "error" TEXT
+    "error" TEXT,
+    "blockedByJobId" TEXT,
+    CONSTRAINT "jobs_blockedByJobId_fkey" FOREIGN KEY ("blockedByJobId") REFERENCES "jobs" ("id") ON DELETE SET NULL ON UPDATE CASCADE
 );
 
 -- CreateTable
@@ -142,10 +153,18 @@ CREATE TABLE "settings" (
 CREATE TABLE "clients" (
     "id" TEXT NOT NULL PRIMARY KEY,
     "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "deletedAt" DATETIME,
     "updatedAt" DATETIME NOT NULL,
+    "stripeCustomerId" TEXT,
     "name" TEXT NOT NULL,
     "email" TEXT,
     "company" TEXT,
+    "line1" TEXT,
+    "line2" TEXT,
+    "city" TEXT,
+    "state" TEXT,
+    "zip" TEXT,
+    "phone" TEXT,
     "hourlyRate" DECIMAL,
     "orgId" TEXT NOT NULL,
     CONSTRAINT "clients_orgId_fkey" FOREIGN KEY ("orgId") REFERENCES "organizations" ("id") ON DELETE CASCADE ON UPDATE CASCADE
@@ -171,13 +190,17 @@ CREATE TABLE "invoices" (
     "id" TEXT NOT NULL PRIMARY KEY,
     "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" DATETIME NOT NULL,
+    "entriesStartDate" DATETIME,
+    "entriesEndDate" DATETIME,
+    "sentAt" DATETIME,
+    "paidAt" DATETIME,
     "number" TEXT NOT NULL,
     "issueDate" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "dueDate" DATETIME NOT NULL,
-    "status" TEXT NOT NULL DEFAULT 'DRAFT',
+    "stripePaymentLink" TEXT,
     "clientId" TEXT NOT NULL,
-    "total" DECIMAL NOT NULL,
-    "notes" TEXT,
+    "tax" DECIMAL,
+    "discount" DECIMAL,
     CONSTRAINT "invoices_clientId_fkey" FOREIGN KEY ("clientId") REFERENCES "clients" ("id") ON DELETE CASCADE ON UPDATE CASCADE
 );
 
@@ -236,7 +259,7 @@ CREATE UNIQUE INDEX "feature_flags_name_key" ON "feature_flags"("name");
 CREATE UNIQUE INDEX "settings_key_key" ON "settings"("key");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "invoices_number_key" ON "invoices"("number");
+CREATE UNIQUE INDEX "invoices_number_clientId_key" ON "invoices"("number", "clientId");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "_OrganizationToUser_AB_unique" ON "_OrganizationToUser"("A", "B");

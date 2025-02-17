@@ -90,7 +90,7 @@ async function seed() {
 	}
 
 	// Current month entries - create entries every few days
-	const currentMonthEntries = []
+	const currentMonthEntries: Promise<any>[] = []
 	for (let day = 1; day <= baseDate.getDate(); day += 2) {
 		currentMonthEntries.push(
 			prisma.timeEntry.create({
@@ -124,7 +124,7 @@ async function seed() {
 	}
 
 	// Previous month entries - create entries for the entire month
-	const lastMonthEntries = []
+	const lastMonthEntries: Promise<any>[] = []
 	const daysInLastMonth = new Date(
 		lastMonth.getFullYear(),
 		lastMonth.getMonth() + 1,
