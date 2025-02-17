@@ -115,4 +115,4 @@ COPY crontab /myapp/crontab
 COPY scripts /myapp/scripts
 RUN chmod +x /myapp/scripts/*
 
-CMD ["litefs", "mount"]
+CMD ["bun", "run", "start"]

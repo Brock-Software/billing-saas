@@ -15,9 +15,9 @@ swap_size_mb = 512
 [build]
 
 [processes]
-  app = ''
+  app = 'bun run start'
   cron = 'supercronic crontab'
-  queue-service = 'sh -c "export PORT=8082 && litefs mount -- bun run workers/queue-service.ts"'
+  queue-service = 'sh -c "export PORT=8082 && bun run workers/queue-service.ts"'
 
 [[mounts]]
   source = 'data'
