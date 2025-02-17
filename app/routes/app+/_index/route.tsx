@@ -52,12 +52,12 @@ export async function loader({ request }: LoaderFunctionArgs) {
 					},
 				},
 			},
-			where: { organization: { is: { id: orgId! } }, deletedAt: null },
+			where: { organization: { id: orgId! }, deletedAt: null },
 		}),
 		prisma.timeEntry.findFirst({
 			where: {
 				endTime: null,
-				client: { organization: { is: { id: orgId! } }, deletedAt: null },
+				client: { organization: { id: orgId! }, deletedAt: null },
 			},
 		}),
 		prisma.timeEntry.findMany({
@@ -65,7 +65,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 			include: { client: true, invoice: true },
 			where: {
 				client: {
-					organization: { is: { id: orgId! } },
+					organization: { id: orgId! },
 					deletedAt: null,
 					...(selectedClients.length ? { id: { in: selectedClients } } : {}),
 				},
@@ -75,7 +75,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 		prisma.timeEntry.count({
 			where: {
 				client: {
-					organization: { is: { id: orgId! } },
+					organization: { id: orgId! },
 					deletedAt: null,
 					...(selectedClients.length ? { id: { in: selectedClients } } : {}),
 				},
@@ -87,7 +87,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 			include: { client: true, invoice: true },
 			where: {
 				client: {
-					organization: { is: { id: orgId! } },
+					organization: { id: orgId! },
 					deletedAt: null,
 				},
 				startTime: {
@@ -163,7 +163,7 @@ export async function action({ request }: ActionFunctionArgs) {
 
 				if (clientId) {
 					const client = await prisma.client.findUnique({
-						where: { id: clientId, organization: { is: { id: orgId! } } },
+						where: { id: clientId, organization: { id: orgId! } },
 						select: { hourlyRate: true },
 					})
 					hourlyRate = client?.hourlyRate ? Number(client.hourlyRate) : null
@@ -188,10 +188,7 @@ export async function action({ request }: ActionFunctionArgs) {
 
 				if (clientId) {
 					const client = await prisma.client.findUnique({
-						where: {
-							id: clientId as string,
-							organization: { is: { id: orgId! } },
-						},
+						where: { id: clientId as string, organization: { id: orgId! } },
 						select: { hourlyRate: true },
 					})
 					hourlyRate = client?.hourlyRate ? Number(client.hourlyRate) : null
@@ -312,7 +309,7 @@ export default function Route() {
 					/>
 
 					<select
-						className="border-input bg-background w-full rounded-md border px-3 py-2 text-sm shadow-sm"
+						className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm"
 						onChange={e => handleClientChange(e.target.value)}
 						defaultValue={entry?.clientId ?? ''}
 						name="clientId"

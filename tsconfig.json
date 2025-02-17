@@ -1,19 +1,24 @@
 {
+  "include": ["**/*.ts", "**/*.tsx"],
   "compilerOptions": {
     "lib": ["DOM", "DOM.Iterable", "ES2022"],
-    "moduleResolution": "node",
+    "isolatedModules": true,
+    "esModuleInterop": true,
+    "jsx": "react-jsx",
     "module": "ESNext",
     "target": "ES2022",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
     "strict": true,
-    "baseUrl": ".",
-    "paths": {
-      "~/*": ["./app/*"]
-    },
-    "esModuleInterop": true,
-    "skipLibCheck": true,
-    "jsx": "react-jsx",
-    "forceConsistentCasingInFileNames": true
-  },
-  "include": ["app/**/*"],
-  "exclude": ["node_modules"]
+    "noImplicitAny": true,
+    "allowJs": true,
+    "forceConsistentCasingInFileNames": true,
+		"paths": {
+			"#app/*": ["./app/*"]
+		},
+		"skipLibCheck": true,
+		"allowImportingTsExtensions": true,
+		"noEmit": true,
+		"noErrorTruncation": true
+  }
 }
