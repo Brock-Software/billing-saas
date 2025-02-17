@@ -1,5 +1,7 @@
 /* eslint-disable no-console */
 import { PrismaClient } from '@prisma/client'
+import { createClient } from '@libsql/client'
+import { PrismaLibSQL } from '@prisma/adapter-libsql'
 import { sendInvoiceEmail } from './queue-service-utils/send-invoice-email'
 import { upsertInvoicePdf } from './queue-service-utils/upsert-invoice-pdf'
 
@@ -23,7 +25,15 @@ const writeOperations = [
 // To do this, we're using a custom 'write' endpoint on the 'app' service that is protected by a token.
 // The queue service will call this endpoint with the appropriate token to perform any write operations.
 
-const prisma = new PrismaClient().$extends({
+const libsql = createClient({
+	url: `${process.env.TURSO_DATABASE_URL}`,
+	authToken: `${process.env.TURSO_AUTH_TOKEN}`,
+})
+
+const adapter = new PrismaLibSQL(libsql)
+const prisma = new PrismaClient({
+	adapter,
+}).$extends({
 	query: {
 		$allModels: {
 			...writeOperations.reduce(
