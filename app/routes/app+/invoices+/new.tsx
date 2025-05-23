@@ -129,6 +129,7 @@ export default function NewInvoice() {
 	const { org } = useLoaderData<typeof loader>()
 	const [selectedClient, setSelectedClient] = useState('')
 	const [netDays, setNetDays] = useState(15)
+	const [customDueDate, setCustomDueDate] = useState('')
 	const [tax, setTax] = useState(0)
 	const [discount, setDiscount] = useState(0)
 	const [searchParams] = useSearchParams()
@@ -139,9 +140,11 @@ export default function NewInvoice() {
 		.map(c => c._count.invoices)
 		.reduce((a, b) => a + b, 0)
 
-	const dueDate = new Date(Date.now() + netDays * 24 * 60 * 60 * 1000)
-		.toISOString()
-		.split('T')[0]
+	const dueDate =
+		customDueDate ||
+		new Date(Date.now() + netDays * 24 * 60 * 60 * 1000)
+			.toISOString()
+			.split('T')[0]
 
 	const invoiceNumber = `INV-${new Date().getFullYear()}-${5231 + totalInvoices + 1}`
 
@@ -374,12 +377,16 @@ export default function NewInvoice() {
 										{ days: 10, label: 'Net 10' },
 										{ days: 15, label: 'Net 15' },
 										{ days: 30, label: 'Net 30' },
+										{ days: -1, label: 'Custom' },
 									].map(({ days, label }) => (
 										<Button
 											key={days}
 											type="button"
 											size="lg"
-											onClick={() => setNetDays(days)}
+											onClick={() => {
+												setNetDays(days)
+												if (days !== -1) setCustomDueDate('')
+											}}
 											variant={netDays === days ? 'outline' : 'ghost'}
 											className="hover:bg-white"
 										>
@@ -387,6 +394,17 @@ export default function NewInvoice() {
 										</Button>
 									))}
 								</div>
+								{netDays === -1 && (
+									<div className="mt-2">
+										<Input
+											type="date"
+											value={customDueDate}
+											onChange={e => setCustomDueDate(e.target.value)}
+											min={new Date().toISOString().split('T')[0]}
+											className="w-full bg-white"
+										/>
+									</div>
+								)}
 							</div>
 
 							<div className="flex gap-4">
