@@ -16,7 +16,7 @@ export class TimeEntry {
 		})
 
 		// Create a new entry from the template
-		const { id, createdAt, updatedAt, endTime, ...entryData } = entry
+		const { id, createdAt, updatedAt, endTime, invoiceId, ...entryData } = entry
 		return prisma.timeEntry.create({
 			data: { ...entryData, startTime: new Date().toISOString() },
 		})
@@ -38,8 +38,17 @@ export class TimeEntry {
 			where: { id: entryId },
 		})
 
-		const { id, createdAt, updatedAt, ...entryData } = entry
-		return prisma.timeEntry.create({ data: entryData })
+		const { id, createdAt, updatedAt, invoiceId, ...entryData } = entry
+		const duration = entry.endTime
+			? new Date(entry.endTime).getTime() - new Date(entry.startTime).getTime()
+			: 0
+		return prisma.timeEntry.create({
+			data: {
+				...entryData,
+				startTime: new Date().toISOString(),
+				endTime: new Date(new Date().getTime() + duration).toISOString(),
+			},
+		})
 	}
 
 	static async updateDuration(entryId: string, duration: string) {
